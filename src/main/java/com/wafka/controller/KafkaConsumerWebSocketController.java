@@ -10,38 +10,31 @@ import com.wafka.service.IWebSocketSenderService;
 import com.wafka.types.CommandName;
 import com.wafka.types.ResponseType;
 import org.slf4j.Logger;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
-import sun.rmi.runtime.Log;
+import org.springframework.context.ApplicationContext;
 
 import javax.websocket.*;
 import javax.websocket.server.ServerEndpoint;
 import java.text.MessageFormat;
 
-@Component
 @ServerEndpoint(value = "/kafka/consumer/ws/v1", decoders = { WebSocketCommandDecoder.class })
 public class KafkaConsumerWebSocketController implements IKafkaConsumerWebSocketController {
-	private static Logger logger;
+	private final Logger logger;
 
-	private static IWebSocketCommandExecutorService iWebSocketCommandExecutorService;
+	private final IWebSocketCommandExecutorService iWebSocketCommandExecutorService;
 
-	private static IWebSocketSenderService iWebSocketSender;
+	private final IWebSocketSenderService iWebSocketSenderService;
 
-	private static IResponseFactory iResponseFactory;
+	private final IResponseFactory iResponseFactory;
 
 	private Session session;
 
-	public KafkaConsumerWebSocketController() { }
+	public KafkaConsumerWebSocketController() {
+		ApplicationContext applicationContext = SpringContext.getApplicationContext();
 
-	@Autowired
-	public KafkaConsumerWebSocketController(
-			Logger logger, IWebSocketCommandExecutorService iWebSocketCommandExecutorService,
-			IWebSocketSenderService iWebSocketSender, IResponseFactory iResponseFactory ) {
-
-		KafkaConsumerWebSocketController.logger = logger;
-		KafkaConsumerWebSocketController.iWebSocketCommandExecutorService = iWebSocketCommandExecutorService;
-		KafkaConsumerWebSocketController.iWebSocketSender = iWebSocketSender;
-		KafkaConsumerWebSocketController.iResponseFactory = iResponseFactory;
+		logger = applicationContext.getBean(Logger.class);
+		iWebSocketCommandExecutorService = applicationContext.getBean(IWebSocketCommandExecutorService.class);
+		iWebSocketSenderService = applicationContext.getBean(IWebSocketSenderService.class);
+		iResponseFactory = applicationContext.getBean(IResponseFactory.class);
 	}
 
 	@OnOpen
@@ -50,7 +43,7 @@ public class KafkaConsumerWebSocketController implements IKafkaConsumerWebSocket
 		logger.info("Established WebSocket connection for consumer: {}", session.getId());
 
 		IResponse iResponse = iResponseFactory.getResponse(ResponseType.COMMUNICATION, "Connected");
-		iWebSocketSender.send(session, iResponse);
+		iWebSocketSenderService.send(session, iResponse);
 	}
 
 	@OnMessage
@@ -85,7 +78,7 @@ public class KafkaConsumerWebSocketController implements IKafkaConsumerWebSocket
 			logger.error("{}. Exception: {}", errorMessage, exception.getMessage());
 
 			IResponse iResponse = iResponseFactory.getResponse(ResponseType.ERROR, errorMessage);
-			iWebSocketSender.send(session, iResponse);
+			iWebSocketSenderService.send(session, iResponse);
 		}
 	}
 }
