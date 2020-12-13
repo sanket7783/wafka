@@ -1,5 +1,5 @@
-wafka
-=====
+# wafka
+___
 
 Have you ever wondered to connect to Kafka through your web browser in order to stream data to your users?
 Wafka is a Spring service which exposes Apache Kafka API over the web using the WebSocket and REST protocols.
@@ -7,7 +7,24 @@ Wafka is a Spring service which exposes Apache Kafka API over the web using the 
 You can adopt a streaming approach using a WebSocket from your client or a Request/Response approach using REST
 protocol.
 
+### Build
+___
+
+You can customize your build environment simply creating a directory under the ```env```
+directory. Don't forget to put the ```application.properties``` file. Once you created
+the environment directory you can build the package. For example, if you would create a build
+for my test environment you could do:
+
+```
+mkdir env/test
+cp conf/application.properties env/test/  # You should customize your properties.
+mvn clean install -Dtargetenv=test        # If you have a maven-settings file you can specify it with -s switch.
+```
+
+
+
 ### Examples
+___
 
 By default, Wafka is listening (both for WebSocket and REST) on port 8787, but you can change it in 
 `application.properties` file.<br><br>
