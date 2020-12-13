@@ -1,6 +1,5 @@
 package com.wafka.configurer;
 
-import com.wafka.controller.IKafkaConsumerWebSocketController;
 import com.wafka.controller.KafkaConsumerWebSocketController;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -13,7 +12,7 @@ import org.springframework.web.socket.server.standard.ServerEndpointExporter;
 @EnableWebSocket
 public class KafkaConsumerWebSocketConfigurer implements WebSocketConfigurer {
 	@Bean
-	public IKafkaConsumerWebSocketController iKafkaConsumerWebSocketController() {
+	public KafkaConsumerWebSocketController kafkaConsumerWebSocketController() {
 		return new KafkaConsumerWebSocketController();
 	}
 

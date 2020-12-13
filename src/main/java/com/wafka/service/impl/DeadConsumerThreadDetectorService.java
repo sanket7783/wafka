@@ -5,41 +5,30 @@ import com.wafka.service.IConsumerService;
 import com.wafka.service.IConsumerWebSocketSessionService;
 import org.slf4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
-import javax.annotation.PostConstruct;
 import javax.websocket.CloseReason;
 import java.io.IOException;
 
 @Service
+@EnableScheduling
 public class DeadConsumerThreadDetectorService {
-	private final Logger logger;
-
-	private final IConsumerService iConsumerService;
-
-	private final IAutoConsumerOperationService iAutoConsumerOperationService;
-
-	private final IConsumerWebSocketSessionService iConsumerWebSocketSessionService;
+	@Autowired
+	private Logger logger;
 
 	@Autowired
-	public DeadConsumerThreadDetectorService(Logger logger, IConsumerService iConsumerService,
-											 IAutoConsumerOperationService iAutoConsumerOperationService,
-											 IConsumerWebSocketSessionService iConsumerWebSocketSessionService) {
+	private IConsumerService iConsumerService;
 
-		this.logger = logger;
-		this.iConsumerService = iConsumerService;
-		this.iAutoConsumerOperationService = iAutoConsumerOperationService;
-		this.iConsumerWebSocketSessionService = iConsumerWebSocketSessionService;
-	}
+	@Autowired
+	private IAutoConsumerOperationService iAutoConsumerOperationService;
 
-	@PostConstruct
-	private void init() {
-		logger.info("Succesfully initialized the dead consumer thread detector service.");
-	}
+	@Autowired
+	private IConsumerWebSocketSessionService iConsumerWebSocketSessionService;
 
-	@Scheduled(fixedDelay = 2000)
-	public void performOperation() {
+	@Scheduled(fixedDelay = 120000)
+	public void performOperationEveryTwoMinutes() {
 		iConsumerService.getRegisteredConsumers().forEach(iConsumerId -> {
 			if (!iAutoConsumerOperationService.isRunning(iConsumerId)) {
 				iAutoConsumerOperationService.stop(iConsumerId);
@@ -51,8 +40,11 @@ public class DeadConsumerThreadDetectorService {
 				try {
 					iConsumerWebSocketSessionService.close(iConsumerId, closeReason);
 					logger.warn("Session closed for consumer {}", iConsumerId);
+
 				} catch (IOException exception) {
-					logger.error("Cloud not close session for consumer {} due to {}", iConsumerId, exception.getMessage());
+					logger.error("Error while closing session for consumer {} due to {}",
+							iConsumerId, exception.getMessage());
+
 				} finally {
 					iConsumerWebSocketSessionService.delete(iConsumerId);
 				}

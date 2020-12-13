@@ -17,7 +17,7 @@ import javax.websocket.server.ServerEndpoint;
 import java.text.MessageFormat;
 
 @ServerEndpoint(value = "/kafka/consumer/ws/v1", decoders = { WebSocketCommandDecoder.class })
-public class KafkaConsumerWebSocketController implements IKafkaConsumerWebSocketController {
+public class KafkaConsumerWebSocketController {
 	private final Logger logger;
 
 	private final IWebSocketCommandExecutorService iWebSocketCommandExecutorService;
