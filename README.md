@@ -17,7 +17,7 @@ By default, Wafka is listening (both for WebSocket and REST) on port 8787, but y
 Using wafka through WebSocket is very easy. Let's see a Javascript example. You can talk to Wafka through a WebSocket
 issuing a set of commands. First thing first, let's create a WebSocket.
 
-```
+```javascript
 // Create the websocket.
 const consumerWebSocket = new WebSocket("ws://localhost:8787/kafka/consumer/ws/v1"); 
 
@@ -73,7 +73,7 @@ function convertBinaryToString(binaryData: any) {
 in the `onopen` callback there are three functions. Let's see what they do. As I said before, you talk with Wafka
 issuing command on the websocket. So let's define a function to send commands.
 
-```
+```javascript
 function sendMessage(commandObject) {
     consumerWebSocket.send(JSON.stringify(commandObject));
 }
@@ -81,7 +81,7 @@ function sendMessage(commandObject) {
 
 Now let's create our Kafka Consumer issuing the proper command to Wafka:
 
-```
+```javascript
 function createConsumer() {
     const command = {
         commandName: "create-consumer",
@@ -98,7 +98,7 @@ function createConsumer() {
 Done. You have created your consumer. Now you should subscribe it to some topics. Let's do this defining
 another function.
 
-```
+```javascript
 function subscribeTopics() {
     const command = {
         commandName: "subscribe-topic",
@@ -116,7 +116,7 @@ with the missing Kafka consumer thread safety for you, so you don't have to worr
 All you need to do now is start your consumer remote poll loop. Wafka will start a thread for your consumer, which will
 be associated with this very websocket and will stream data over it.
 
-```
+```javascript
 function startConsumer() {
     const command = {
         commandName: "start-consumer",
@@ -143,7 +143,7 @@ http://localhost:8787/kafka/consumer/rest/v1/<consumer-id>/<consumer-group-id>/c
 
 For example:
 
-```
+```bash
 curl -X POST "http://localhost:8787/kafka/consumer/rest/v1/my-consumer-id/my-group-id/create?enableAutoCommit=true&kafkaClusterId=localhost:9092"
 
 {
@@ -164,7 +164,7 @@ http://localhost:8787/kafka/consumer/rest/v1/<consumer-id>/subscribe
 
 For example:
 
-```
+```bash
 curl -X POST -H "Content-Type: application/json" --data '["testing-topic"]' http://localhost:8787/kafka/consumer/rest/v1/my-consumer-id/subscribe
 
 {
@@ -185,7 +185,7 @@ http://localhost:8787/kafka/consumer/rest/v1/<consumer-id>/fetch"
 
 For example:
 
-```
+```bash
 curl -X GET "http://localhost:8787/kafka/consumer/rest/v1/my-consumer-id/fetch?pollDuration=1"
 
 {
