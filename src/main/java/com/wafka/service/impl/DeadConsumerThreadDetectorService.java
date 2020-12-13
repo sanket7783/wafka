@@ -3,9 +3,9 @@ package com.wafka.service.impl;
 import com.wafka.service.IAutoConsumerOperationService;
 import com.wafka.service.IConsumerService;
 import com.wafka.service.IConsumerWebSocketSessionService;
+import com.wafka.types.OperationStatus;
 import org.slf4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
@@ -13,7 +13,6 @@ import javax.websocket.CloseReason;
 import java.io.IOException;
 
 @Service
-@EnableScheduling
 public class DeadConsumerThreadDetectorService {
 	@Autowired
 	private Logger logger;
@@ -31,8 +30,11 @@ public class DeadConsumerThreadDetectorService {
 	public void performOperationEveryTwoMinutes() {
 		iConsumerService.getRegisteredConsumers().forEach(iConsumerId -> {
 			if (!iAutoConsumerOperationService.isRunning(iConsumerId)) {
-				iAutoConsumerOperationService.stop(iConsumerId);
-				logger.warn("Detected and removed dead consumer thread {} from the map.", iConsumerId);
+				if (iAutoConsumerOperationService.stop(iConsumerId) == OperationStatus.SUCCESS) {
+					logger.info("Detected and removed dead consumer thread {} from the map.", iConsumerId);
+				} else {
+					logger.warn("Could not stop and remove the consumer thread {}", iConsumerId);
+				}
 
 				CloseReason closeReason = new CloseReason(CloseReason.CloseCodes.UNEXPECTED_CONDITION,
 						"Consumer thread not running anymore");
