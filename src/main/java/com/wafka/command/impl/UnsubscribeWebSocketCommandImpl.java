@@ -41,7 +41,7 @@ public class UnsubscribeWebSocketCommandImpl implements IWebSocketCommand {
 		IResponse iResponse;
 		if (operationStatus == OperationStatus.SUCCESS) {
 			iResponse = iResponseFactory.getResponse(ResponseType.COMMUNICATION,
-					"Succesfully unsubscribed consumer " + iConsumerId);
+					"Successfully unsubscribed consumer " + iConsumerId);
 		} else {
 			iResponse = iResponseFactory.getResponse(ResponseType.ERROR,
 					"Failed to unsubscribe consumer " + iConsumerId);

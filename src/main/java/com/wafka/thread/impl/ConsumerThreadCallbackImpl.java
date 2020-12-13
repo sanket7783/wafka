@@ -42,7 +42,7 @@ public class ConsumerThreadCallbackImpl implements IConsumerThreadCallback {
 		List<IFetchedContent> fetchedContents = iFetchedContentFactory.getContents(consumerRecords);
 
 		IResponse iResponse = iResponseFactory.getResponse(
-				ResponseType.INCOMING_DATA, "Succesfully fetched data", fetchedContents);
+				ResponseType.INCOMING_DATA, "Successfully fetched data", fetchedContents);
 
 		iWebSocketSender.send(session, iResponse);
 	}

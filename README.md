@@ -12,7 +12,7 @@ protocol.
 By default, Wafka is listening (both for WebSocket and REST) on port 8787, but you can change it in 
 `application.properties` file.<br><br>
 
-##### 1) WebSocket
+### 1) WebSocket
 
 Using wafka through WebSocket is very easy. Let's see a Javascript example. You can talk to Wafka through a WebSocket
 issuing a set of commands. First thing first, let's create a WebSocket.
@@ -130,4 +130,95 @@ function startConsumer() {
 
 You can specifiy your poll duration interval in seconds. After this, you will have your consumer up and runnig.<br><br>
 
-##### 2) REST
+### 2) REST
+
+If you don't want to use websockets and you prefer a request/response approach, you can use the Wafka REST interface. 
+In the following example I'll assume you are running Wafka on localhost on the default port.
+
+In order to create a Kafka Consumer the endpoint to call is:
+
+```
+http://localhost:8787/kafka/consumer/rest/v1/<consumer-id>/<consumer-group-id>/create
+```
+
+For example:
+
+```
+curl -X POST "http://localhost:8787/kafka/consumer/rest/v1/my-consumer-id/my-group-id/create?enableAutoCommit=true&kafkaClusterId=localhost:9092"
+
+{
+    "consumerId": "my-consumer-id",
+    "kafkaClusterUri": "localhost:9092",
+    "groupId": "my-group-id",
+    "enableAutoCommit": true,
+    "message": "Consumer successfully created."
+}
+```
+
+Now we have a consumer identified by the string "my-consumer-id" belonging to the "my-group-id" group. Next step is 
+to suscribe to topics. In order to do it, we can use the endpoint:
+
+```
+http://localhost:8787/kafka/consumer/rest/v1/<consumer-id>/subscribe
+```
+
+For example:
+
+```
+curl -X POST -H "Content-Type: application/json" --data '["testing-topic"]' http://localhost:8787/kafka/consumer/rest/v1/my-consumer-id/subscribe
+
+{
+    "subscriptions": [
+        "testing-topic"
+    ],
+    "consumerId": "my-consumer-id",
+    "message": "Subscriptions updated."
+}
+```
+
+Now, if you use a Kafka producer to sent some data to that topic, you can issue a fetch call in order to get some data.
+The endpoint to call in this case is:
+
+```
+http://localhost:8787/kafka/consumer/rest/v1/<consumer-id>/fetch"
+```
+
+For example:
+
+```
+curl -X GET "http://localhost:8787/kafka/consumer/rest/v1/my-consumer-id/fetch?pollDuration=1"
+
+{
+    "data": {
+        "responseType": "INCOMING_DATA",
+        "message": "Successfully fetched data.",
+        "fetchedContents": [
+            {
+                "key": null,
+                "content": [
+                    99,
+                    111,
+                    110,
+                    116,
+                    101,
+                    110,
+                    116,
+                    32,
+                    115,
+                    101,
+                    110,
+                    116
+                ],
+                "topic": "testing-topic",
+                "partition": 0,
+                "offset": 4446
+            }
+        ]
+    },
+    "consumerId": "my-consumer-id",
+    "message": "Successfully fetched data from topics."
+}
+```
+
+In this case, I used the Kafka console producer in order to send a message on the subscribed topic. The binary message
+is visible under the JSON key "fetched_content".

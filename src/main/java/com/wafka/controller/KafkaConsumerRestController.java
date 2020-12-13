@@ -74,12 +74,14 @@ public class KafkaConsumerRestController {
 	public ResponseEntity<Object> createConsumer(
 			@PathVariable("consumerId") String consumerId,
 			@PathVariable("groupId") String groupId,
-			@RequestParam("enableAutoCommit") @DefaultValue("true") Boolean enableAutoCommit) {
+			@RequestParam("enableAutoCommit") Boolean enableAutoCommit,
+			@RequestParam("kafkaClusterId") String kafkaClusterId) {
 
 		IConsumerId iConsumerId = iConsumerIdFactory.getConsumerId(consumerId);
 		logger.info("Received create consumer request with id {}.", iConsumerId);
 
 		Map<ConsumerParameter, Object> consumerParameters = new EnumMap<>(ConsumerParameter.class);
+		consumerParameters.put(ConsumerParameter.KAFKA_CLUSTER_URI, kafkaClusterId);
 		consumerParameters.put(ConsumerParameter.GROUP_ID, groupId);
 		consumerParameters.put(ConsumerParameter.ENABLE_AUTO_COMMIT, enableAutoCommit);
 		consumerParameters.put(ConsumerParameter.CONSUMER_ID, consumerId);
@@ -87,9 +89,12 @@ public class KafkaConsumerRestController {
 		Properties consumerProperties = iConsumerPropertyFactory.getProperties(consumerParameters);
 		iConsumerService.create(iConsumerId, consumerProperties);
 
+		// Fill the response with the supplied parameters.
 		Map<String, Object> response = new HashMap<>();
-		response.put(CONSUMER_ID_FIELD, consumerId);
-		response.put(MESSAGE_FIELD, "Consumer succesfully created.");
+		consumerParameters.forEach((consumerParameter, parameterValue) -> {
+			response.put(consumerParameter.getDescription(), parameterValue);
+		});
+		response.put(MESSAGE_FIELD, "Consumer successfully created.");
 
 		return new ResponseEntity<>(response, HttpStatus.OK);
 	}
@@ -97,7 +102,7 @@ public class KafkaConsumerRestController {
 	@PostMapping(value = "/{consumerId}/subscribe", produces = MediaType.APPLICATION_JSON_VALUE)
 	public ResponseEntity<Object> subscribeTopics(
 			@PathVariable("consumerId") String consumerId,
-			List<String> topics) {
+			@RequestBody List<String> topics) {
 
 		IConsumerId iConsumerId = iConsumerIdFactory.getConsumerId(consumerId);
 		logger.info("Received subscription request from for consumer {}.", iConsumerId);
@@ -123,12 +128,14 @@ public class KafkaConsumerRestController {
 		List<IFetchedContent> fetchedContents = iManualConsumerOperationService.fetch(
 				iConsumerId, pollDurationSeconds);
 
+		String responseMessage = fetchedContents.isEmpty() ? "No data to fetch" : "Successfully fetched data.";
+
 		IResponse iResponse = iResponseFactory.getResponse(
-				ResponseType.INCOMING_DATA, "Succesfully fetched data.", fetchedContents);
+				ResponseType.INCOMING_DATA, responseMessage, fetchedContents);
 
 		Map<String, Object> response = new HashMap<>();
 		response.put(CONSUMER_ID_FIELD, consumerId);
-		response.put(MESSAGE_FIELD, "Succesfully fetched data from topics.");
+		response.put(MESSAGE_FIELD, "Successfully fetched data from topics.");
 		response.put(DATA_FIELD, iResponse);
 
 		return new ResponseEntity<>(response, HttpStatus.OK);
@@ -145,7 +152,7 @@ public class KafkaConsumerRestController {
 
 		Map<String, Object> response = new HashMap<>();
 		response.put(CONSUMER_ID_FIELD, consumerId);
-		response.put(MESSAGE_FIELD, "Committed succesfully in sync mode.");
+		response.put(MESSAGE_FIELD, "Committed successfully in sync mode.");
 
 		return new ResponseEntity<>(response, HttpStatus.OK);
 	}
@@ -161,7 +168,7 @@ public class KafkaConsumerRestController {
 
 		Map<String, Object> response = new HashMap<>();
 		response.put(CONSUMER_ID_FIELD, consumerId);
-		response.put(MESSAGE_FIELD, "Succesfully stopped consumer.");
+		response.put(MESSAGE_FIELD, "Successfully stopped consumer.");
 
 		return new ResponseEntity<>(response, HttpStatus.OK);
 	}
@@ -177,7 +184,7 @@ public class KafkaConsumerRestController {
 
 		Map<String, Object> response = new HashMap<>();
 		response.put(CONSUMER_ID_FIELD, consumerId);
-		response.put(MESSAGE_FIELD, "Succesfully unsubscribed topics.");
+		response.put(MESSAGE_FIELD, "Successfully unsubscribed topics.");
 
 		return new ResponseEntity<>(response, HttpStatus.OK);
 	}

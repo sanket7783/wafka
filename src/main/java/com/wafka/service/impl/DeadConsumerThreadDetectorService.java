@@ -4,6 +4,7 @@ import com.wafka.service.IAutoConsumerOperationService;
 import com.wafka.service.IConsumerService;
 import com.wafka.service.IConsumerWebSocketSessionService;
 import com.wafka.types.OperationStatus;
+import com.wafka.types.Protocol;
 import org.slf4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -29,7 +30,9 @@ public class DeadConsumerThreadDetectorService {
 	@Scheduled(fixedDelay = 120000)
 	public void performOperationEveryTwoMinutes() {
 		iConsumerService.getRegisteredConsumers().forEach(iConsumerId -> {
-			if (!iAutoConsumerOperationService.isRunning(iConsumerId)) {
+			if (!iAutoConsumerOperationService.isRunning(iConsumerId) &&
+					iConsumerId.getProtocolType() == Protocol.WEBSOCKET) {
+
 				if (iAutoConsumerOperationService.stop(iConsumerId) == OperationStatus.SUCCESS) {
 					logger.info("Detected and removed dead consumer thread {} from the map.", iConsumerId);
 				} else {
