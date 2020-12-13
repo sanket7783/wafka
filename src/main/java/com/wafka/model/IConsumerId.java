@@ -2,7 +2,9 @@ package com.wafka.model;
 
 import com.wafka.types.Protocol;
 
-public interface IConsumerId {
+import java.io.Serializable;
+
+public interface IConsumerId extends Serializable {
 	String getIdentifier();
 
 	Protocol getProtocolType();

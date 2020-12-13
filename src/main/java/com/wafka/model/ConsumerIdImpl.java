@@ -5,6 +5,8 @@ import com.wafka.types.Protocol;
 import java.util.Objects;
 
 public class ConsumerIdImpl implements IConsumerId {
+	private static final long serialVersionUID = -8662939182587591266L;
+
 	private final String identifier;
 
 	private final Protocol protocol;

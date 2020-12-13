@@ -1,6 +1,5 @@
 package com.wafka.model;
 
-import com.wafka.model.IConsumerId;
 import com.wafka.thread.IConsumerThreadCallback;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
 
@@ -8,8 +7,11 @@ import java.time.Duration;
 
 public class ConsumerThreadSettings {
 	private IConsumerThreadCallback iWebSocketConsumerCallback;
+
 	private IConsumerId iConsumerId;
+
 	private Duration pollLoopDuration;
+
 	private KafkaConsumer<String, byte[]> wrappedConsumer;
 
 	public ConsumerThreadSettings() {
