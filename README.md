@@ -1,5 +1,4 @@
 # wafka
-___
 
 Have you ever wondered to connect to Kafka through your web browser in order to stream data to your users?
 Wafka is a Spring service which exposes Apache Kafka API over the web using the WebSocket and REST protocols.

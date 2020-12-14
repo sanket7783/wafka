@@ -9,10 +9,7 @@ import org.slf4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.util.Map;
-import java.util.Optional;
-import java.util.Properties;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 @Service
@@ -64,6 +61,6 @@ public class ConsumerServiceImpl implements IConsumerService {
 
 	@Override
 	public Set<IConsumerId> getRegisteredConsumers() {
-		return kafkaConsumersMap.keySet();
+		return Collections.unmodifiableSet(kafkaConsumersMap.keySet());
 	}
 }

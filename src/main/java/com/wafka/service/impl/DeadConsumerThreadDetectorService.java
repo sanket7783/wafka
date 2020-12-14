@@ -1,5 +1,6 @@
 package com.wafka.service.impl;
 
+import com.wafka.exception.NoSuchConsumerThreadException;
 import com.wafka.service.IAutoConsumerOperationService;
 import com.wafka.service.IConsumerService;
 import com.wafka.service.IConsumerWebSocketSessionService;
@@ -33,18 +34,23 @@ public class DeadConsumerThreadDetectorService {
 			if (!iAutoConsumerOperationService.isRunning(iConsumerId) &&
 					iConsumerId.getProtocolType() == Protocol.WEBSOCKET) {
 
-				if (iAutoConsumerOperationService.stop(iConsumerId) == OperationStatus.SUCCESS) {
-					logger.info("Detected and removed dead consumer thread {} from the map.", iConsumerId);
-				} else {
-					logger.warn("Could not stop and remove the consumer thread {}", iConsumerId);
+				try {
+					OperationStatus stopOperationStatus = iAutoConsumerOperationService.stop(iConsumerId);
+					if (stopOperationStatus == OperationStatus.SUCCESS) {
+						logger.info("Detected a dead consumer thread {}.", iConsumerId);
+					} else {
+						logger.warn("Could not stop and remove the consumer thread {}", iConsumerId);
+					}
+				} catch (NoSuchConsumerThreadException exception) {
+					logger.warn("Could not stop the consumer thread {} because it doesn't exists.", iConsumerId);
 				}
 
 				CloseReason closeReason = new CloseReason(CloseReason.CloseCodes.UNEXPECTED_CONDITION,
-						"Consumer thread not running anymore");
+						"Consumer thread " + iConsumerId + " not running anymore");
 
 				try {
 					iConsumerWebSocketSessionService.close(iConsumerId, closeReason);
-					logger.warn("Session closed for consumer {}", iConsumerId);
+					logger.info("Session closed for consumer {}", iConsumerId);
 
 				} catch (IOException exception) {
 					logger.error("Error while closing session for consumer {} due to {}",
