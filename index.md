@@ -41,7 +41,8 @@ const consumerWebSocket = new WebSocket("ws://localhost:8787/kafka/consumer/ws/v
 // Define the callback that will be invoked on connection creation.
 consumerWebSocket.onopen = () => {
     console.log("WebSocket connection opened.");
-    
+
+    // We'll see these function in the next section.
     createConsumer();
     subscribeTopics();
     startConsumer();
