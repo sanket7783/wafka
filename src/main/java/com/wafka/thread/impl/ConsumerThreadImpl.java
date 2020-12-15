@@ -76,7 +76,10 @@ public class ConsumerThreadImpl extends AbstractConsumerThread {
 			} catch (WakeupException exception) {
 				MethodResult methodResult = handleWakeupInterrupt();
 				CompletableFuture<Object> future = asyncMethodResponsesMap.get(methodResult.getMethodName());
-				future.complete(methodResult.getResult());
+				// TODO: avoid this if putting all the method names inside asyncMethodResponseMap
+				if (future != null) {
+					future.complete(methodResult.getResult());
+				}
 
 			} catch (Exception exception) {
 				iWebSocketConsumerCallback.onConsumerError(exception);
