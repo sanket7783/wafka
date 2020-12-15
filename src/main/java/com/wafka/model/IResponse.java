@@ -10,10 +10,6 @@ public interface IResponse extends Serializable {
 
 	ResponseType getResponseType();
 
-	void setFetchedContents(List<IFetchedContent> fetchedContents);
-
-	List<IFetchedContent> getFetchedContents();
-
 	void setMessage(String message);
 
 	String getMessage();

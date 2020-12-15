@@ -4,6 +4,7 @@ import com.wafka.model.IConsumerId;
 import com.wafka.model.ConsumerThreadSettings;
 
 import java.util.Collection;
+import java.util.Set;
 
 public interface IConsumerThreadService {
 	void start(IConsumerId iConsumerId);
@@ -19,4 +20,6 @@ public interface IConsumerThreadService {
 	void subscribe(IConsumerId iConsumerId, Collection<String> topics);
 
 	void unsubscribe(IConsumerId iConsumerId);
+
+	Set<String> getSubscriptions(IConsumerId iConsumerId);
 }

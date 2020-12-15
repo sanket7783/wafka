@@ -6,7 +6,8 @@ public enum CommandName {
 	START_CONSUMER_LOOP("start-consumer"),
 	STOP_CONSUMER("stop-consumer"),
 	COMMIT_SYNC("commit-sync"),
-	UNSUBSCRIBE("unsubscribe");
+	UNSUBSCRIBE("unsubscribe"),
+	LIST_SUBSCRIPTIONS("list-subscriptions");
 
 	private final String description;
 

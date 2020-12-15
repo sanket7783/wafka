@@ -11,9 +11,9 @@ import org.slf4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.util.Collection;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.Future;
 
 @Service
 public class ConsumerThreadServiceImpl implements IConsumerThreadService {
@@ -98,6 +98,20 @@ public class ConsumerThreadServiceImpl implements IConsumerThreadService {
 		AbstractConsumerThread abstractConsumerThread = getConsumerThreadOrThrow(iConsumerId);
 		logger.info("Unsubscribing consumer {}.", iConsumerId);
 		abstractConsumerThread.unsubscribe();
+	}
+
+	@Override
+	@SuppressWarnings("unchecked cast")
+	public Set<String> getSubscriptions(IConsumerId iConsumerId) {
+		AbstractConsumerThread abstractConsumerThread = getConsumerThreadOrThrow(iConsumerId);
+
+		Future<Object> operationFuture = abstractConsumerThread.getSubscriptions();
+		try {
+			return (Set<String>)operationFuture.get();
+		} catch (Exception exception) {
+			logger.error("Error while getting subscriptions: {}", exception.getMessage());
+			return Collections.emptySet();
+		}
 	}
 
 	private AbstractConsumerThread getConsumerThreadOrThrow(IConsumerId iConsumerId) {

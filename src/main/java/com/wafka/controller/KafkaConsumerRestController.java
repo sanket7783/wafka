@@ -11,7 +11,6 @@ import com.wafka.service.IConsumerService;
 import com.wafka.service.IManualConsumerOperationService;
 import com.wafka.types.ConsumerParameter;
 import com.wafka.types.Protocol;
-import com.wafka.types.ResponseType;
 import io.swagger.annotations.Api;
 import org.slf4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -91,9 +90,9 @@ public class KafkaConsumerRestController {
 
 		// Fill the response with the supplied parameters.
 		Map<String, Object> response = new HashMap<>();
-		consumerParameters.forEach((consumerParameter, parameterValue) -> {
-			response.put(consumerParameter.getDescription(), parameterValue);
-		});
+		consumerParameters.forEach((consumerParameter, parameterValue) ->
+				response.put(consumerParameter.getDescription(), parameterValue));
+
 		response.put(MESSAGE_FIELD, "Consumer successfully created.");
 
 		return new ResponseEntity<>(response, HttpStatus.OK);
@@ -129,9 +128,7 @@ public class KafkaConsumerRestController {
 				iConsumerId, pollDurationSeconds);
 
 		String responseMessage = fetchedContents.isEmpty() ? "No data to fetch" : "Successfully fetched data.";
-
-		IResponse iResponse = iResponseFactory.getResponse(
-				ResponseType.INCOMING_DATA, responseMessage, fetchedContents);
+		IResponse iResponse = iResponseFactory.getResponse(responseMessage, fetchedContents);
 
 		Map<String, Object> response = new HashMap<>();
 		response.put(CONSUMER_ID_FIELD, consumerId);

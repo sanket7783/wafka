@@ -13,9 +13,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.Duration;
-import java.util.Collection;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 import java.util.function.Consumer;
 
 @Service
@@ -76,6 +74,16 @@ public class ManualConsumerOperationService implements IManualConsumerOperationS
 			logger.info("Unsubscribing for consumer {}.", iConsumerId);
 			kafkaConsumer.unsubscribe();
 		});
+	}
+
+	@Override
+	public Set<String> getSubscriptions(IConsumerId iConsumerId) {
+		logger.info("Getting subscriptions for consumer {}.", iConsumerId);
+		Optional<KafkaConsumer<String, byte[]>> kafkaConsumerOpt = iConsumerService.getConsumer(iConsumerId);
+		if (!kafkaConsumerOpt.isPresent()) {
+			return new HashSet<>();
+		}
+		return kafkaConsumerOpt.get().subscription();
 	}
 
 	private OperationStatus doOperation(IConsumerId iConsumerId, Consumer<KafkaConsumer<String, byte[]>> consumer) {

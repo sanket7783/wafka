@@ -2,7 +2,6 @@ package com.wafka.thread.impl;
 
 import com.wafka.factory.IFetchedContentFactory;
 import com.wafka.factory.IResponseFactory;
-import com.wafka.model.IFetchedContent;
 import com.wafka.model.IResponse;
 import com.wafka.service.IWebSocketSenderService;
 import com.wafka.thread.IConsumerThreadCallback;
@@ -12,7 +11,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.websocket.Session;
-import java.util.List;
 
 public class ConsumerThreadCallbackImpl implements IConsumerThreadCallback {
 	private static final Logger LOGGER = LoggerFactory.getLogger(ConsumerThreadCallbackImpl.class);
@@ -39,10 +37,8 @@ public class ConsumerThreadCallbackImpl implements IConsumerThreadCallback {
 
 	@Override
 	public void onRecordsReceived(ConsumerRecords<String, byte[]> consumerRecords) {
-		List<IFetchedContent> fetchedContents = iFetchedContentFactory.getContents(consumerRecords);
-
-		IResponse iResponse = iResponseFactory.getResponse(
-				ResponseType.INCOMING_DATA, "Successfully fetched data", fetchedContents);
+		IResponse iResponse = iResponseFactory.getResponse("Successfully fetched data",
+				iFetchedContentFactory.getContents(consumerRecords));
 
 		iWebSocketSender.send(session, iResponse);
 	}
