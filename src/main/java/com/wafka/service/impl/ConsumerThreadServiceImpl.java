@@ -2,11 +2,11 @@ package com.wafka.service.impl;
 
 import com.wafka.exception.ConsumerThreadAlreadyCreatedException;
 import com.wafka.exception.NoSuchConsumerThreadException;
+import com.wafka.factory.IConsumerThreadFactory;
 import com.wafka.model.ConsumerThreadSettings;
 import com.wafka.model.IConsumerId;
 import com.wafka.service.IConsumerThreadService;
 import com.wafka.thread.AbstractConsumerThread;
-import com.wafka.thread.impl.ConsumerThreadImpl;
 import org.slf4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -23,9 +23,12 @@ public class ConsumerThreadServiceImpl implements IConsumerThreadService {
 
 	private final Logger logger;
 
+	private final IConsumerThreadFactory iConsumerThreadFactory;
+
 	@Autowired
-	public ConsumerThreadServiceImpl(Logger logger) {
+	public ConsumerThreadServiceImpl(Logger logger, IConsumerThreadFactory iConsumerThreadFactory) {
 		this.logger = logger;
+		this.iConsumerThreadFactory = iConsumerThreadFactory;
 
 		consumerThreadMap = new ConcurrentHashMap<>();
 	}
@@ -48,8 +51,8 @@ public class ConsumerThreadServiceImpl implements IConsumerThreadService {
 			throw new ConsumerThreadAlreadyCreatedException(iConsumerId);
 		}
 
-		ConsumerThreadImpl kafkaConsumerThread = new ConsumerThreadImpl(consumerThreadSettings);
-		consumerThreadMap.put(iConsumerId, kafkaConsumerThread);
+		AbstractConsumerThread abstractConsumerThread = iConsumerThreadFactory.getThread(consumerThreadSettings);
+		consumerThreadMap.put(iConsumerId, abstractConsumerThread);
 		logger.info("Created consumer thread for client {}.", iConsumerId);
 	}
 

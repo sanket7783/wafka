@@ -41,8 +41,6 @@ public class ConsumerThreadImpl extends AbstractConsumerThread {
 	}
 
 	public ConsumerThreadImpl(ConsumerThreadSettings consumerThreadSettings) {
-		setName("WSC-Thread-" + consumerThreadSettings.getiConsumerIdentifier());
-
 		this.consumerThreadSettings = consumerThreadSettings;
 		this.kafkaConsumer = consumerThreadSettings.getWrappedConsumer();
 
