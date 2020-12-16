@@ -15,9 +15,9 @@ the environment directory you can build the package. For example, if you would c
 for my test environment you could do:
 
 ```
-mkdir env/test
-cp conf/application.properties env/test/  # You should customize your properties.
-mvn clean install -Dtargetenv=test        # If you have a maven-settings file you can specify it with -s switch.
+mkdir -p env/test/envConf
+cp conf/application.properties env/test/envConf  # You should customize your properties.
+mvn clean install -Dtargetenv=test               # If you have a maven-settings file you can specify it with -s switch.
 ```
 
 
