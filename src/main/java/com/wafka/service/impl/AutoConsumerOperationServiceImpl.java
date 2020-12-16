@@ -10,7 +10,6 @@ import org.slf4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.util.Collection;
 import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
@@ -72,7 +71,7 @@ public class AutoConsumerOperationServiceImpl implements IAutoConsumerOperationS
 	}
 
 	@Override
-	public OperationStatus subscribe(IConsumerId iConsumerId, Collection<String> topics) {
+	public OperationStatus subscribe(IConsumerId iConsumerId, Set<String> topics) {
 		if (isRunning(iConsumerId)) {
 			iConsumerThreadService.subscribe(iConsumerId, topics);
 			return OperationStatus.SUCCESS;

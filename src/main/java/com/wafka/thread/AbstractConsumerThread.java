@@ -1,6 +1,6 @@
 package com.wafka.thread;
 
-import java.util.Collection;
+import java.util.Set;
 import java.util.concurrent.Future;
 
 public abstract class AbstractConsumerThread extends Thread {
@@ -8,7 +8,7 @@ public abstract class AbstractConsumerThread extends Thread {
 
 	public abstract void stopPolling();
 
-	public abstract void updateSubscriptions(Collection<String> topics);
+	public abstract void updateSubscriptions(Set<String> topics);
 
 	public abstract void unsubscribe();
 

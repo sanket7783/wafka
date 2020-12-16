@@ -106,7 +106,7 @@ public class KafkaConsumerRestController {
 		IConsumerId iConsumerId = iConsumerIdFactory.getConsumerId(consumerId);
 		logger.info("Received subscription request from for consumer {}.", iConsumerId);
 
-		iManualConsumerOperationService.subscribe(iConsumerId, topics);
+		iManualConsumerOperationService.subscribe(iConsumerId, new HashSet<>(topics));
 
 		Map<String, Object> response = new HashMap<>();
 		response.put(CONSUMER_ID_FIELD, consumerId);

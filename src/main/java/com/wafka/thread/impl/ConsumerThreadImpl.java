@@ -4,7 +4,6 @@ import com.wafka.model.ConsumerThreadSettings;
 import com.wafka.model.MethodResult;
 import com.wafka.thread.AbstractConsumerThread;
 import com.wafka.thread.IConsumerThreadCallback;
-import com.wafka.types.OperationStatus;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
 import org.apache.kafka.common.errors.WakeupException;
@@ -14,15 +13,13 @@ import org.slf4j.LoggerFactory;
 import java.time.Duration;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Future;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 public class ConsumerThreadImpl extends AbstractConsumerThread {
 	private static final Logger LOGGER = LoggerFactory.getLogger(ConsumerThreadImpl.class);
-	
-	private static final MethodResult noOpMethodResult= 
-			new MethodResult("", OperationStatus.NOOP);
 
 	private final AtomicBoolean shouldStopPolling;
 	private final AtomicBoolean shouldCommitOffset;
@@ -35,12 +32,12 @@ public class ConsumerThreadImpl extends AbstractConsumerThread {
 	private final ConsumerThreadSettings consumerThreadSettings;
 	private final KafkaConsumer<String, byte[]> kafkaConsumer;
 
-	private final Collection<String> activeTopics;
+	private final Set<String> activeTopics;
 
 	private final Map<String, CompletableFuture<Object>> asyncMethodResponsesMap;
 
 	private interface DoNotDisturbeOperation<T> {
-		T perform();
+		Optional<T> perform();
 	}
 
 	public ConsumerThreadImpl(ConsumerThreadSettings consumerThreadSettings) {
@@ -58,7 +55,7 @@ public class ConsumerThreadImpl extends AbstractConsumerThread {
 
 		wakeUpSemaphore = new Semaphore(1);
 
-		asyncMethodResponsesMap = new HashMap<>();
+		asyncMethodResponsesMap = new ConcurrentHashMap<>();
 	}
 
 	@Override
@@ -74,12 +71,13 @@ public class ConsumerThreadImpl extends AbstractConsumerThread {
 				}
 
 			} catch (WakeupException exception) {
-				MethodResult methodResult = handleWakeupInterrupt();
-				CompletableFuture<Object> future = asyncMethodResponsesMap.get(methodResult.getMethodName());
-				// TODO: avoid this if putting all the method names inside asyncMethodResponseMap
-				if (future != null) {
-					future.complete(methodResult.getResult());
-				}
+				Optional<MethodResult> optionalMethodResult = handleWakeupInterrupt();
+				optionalMethodResult.ifPresent(methodResult ->
+						asyncMethodResponsesMap.computeIfPresent(methodResult.getMethodName(), (key, value) -> {
+							value.complete(methodResult.getResult());
+							return value;
+						})
+				);
 
 			} catch (Exception exception) {
 				iWebSocketConsumerCallback.onConsumerError(exception);
@@ -92,7 +90,7 @@ public class ConsumerThreadImpl extends AbstractConsumerThread {
 		doNotDisturbeOperaton(() -> {
 			shouldCommitOffset.set(true);
 			kafkaConsumer.wakeup();
-			return OperationStatus.NOOP;
+			return Optional.empty();
 		});
 	}
 
@@ -101,17 +99,17 @@ public class ConsumerThreadImpl extends AbstractConsumerThread {
 		doNotDisturbeOperaton(() -> {
 			shouldStopPolling.set(true);
 			kafkaConsumer.wakeup();
-			return OperationStatus.NOOP;
+			return Optional.empty();
 		});
 	}
 
 	@Override
-	public void updateSubscriptions(Collection<String> topics) {
+	public void updateSubscriptions(Set<String> topics) {
 		doNotDisturbeOperaton(() -> {
 			activeTopics.addAll(topics);
 			shouldUpdateSubscriptions.set(true);
 			kafkaConsumer.wakeup();
-			return OperationStatus.NOOP;
+			return Optional.empty();
 		});
 	}
 
@@ -121,7 +119,7 @@ public class ConsumerThreadImpl extends AbstractConsumerThread {
 			activeTopics.clear();
 			shouldUnsubscribe.set(true);
 			kafkaConsumer.wakeup();
-			return OperationStatus.NOOP;
+			return Optional.empty();
 		});
 	}
 
@@ -132,49 +130,44 @@ public class ConsumerThreadImpl extends AbstractConsumerThread {
 		return doNotDisturbeOperaton(() -> {
 			shouldGetSubscriptionList.set(true);
 			kafkaConsumer.wakeup();
-			return asyncMethodResponsesMap.get("getSubscriptions");
+			return Optional.of(asyncMethodResponsesMap.get("getSubscriptions"));
 
 		}).orElseGet(() -> CompletableFuture.completedFuture(Collections.emptySet()));
 	}
 
-	private MethodResult handleWakeupInterrupt() {
+	private Optional<MethodResult> handleWakeupInterrupt() {
 		return doNotDisturbeOperaton(() -> {
 			if (shouldStopPolling.get()) {
 				kafkaConsumer.commitSync();
-				return new MethodResult("stopPolling", OperationStatus.NOOP);
 
 			} else if (shouldCommitOffset.get()) {
 				kafkaConsumer.commitSync();
 				shouldCommitOffset.set(false);
-				return new MethodResult("commitAsync", OperationStatus.NOOP);
 
 			} else if (shouldUpdateSubscriptions.get()) {
 				kafkaConsumer.commitSync();
 				kafkaConsumer.subscribe(activeTopics);
 				shouldUpdateSubscriptions.set(false);
-				return new MethodResult("udateSubscriptions", OperationStatus.NOOP);
 
 			} else if (shouldUnsubscribe.get()) {
 				kafkaConsumer.commitSync();
 				kafkaConsumer.unsubscribe();
 				shouldUnsubscribe.set(false);
-				return new MethodResult("unsubscribe", OperationStatus.NOOP);
 
 			} else if (shouldGetSubscriptionList.get()) {
 				kafkaConsumer.commitSync();
 				Set<String> subscriptions = kafkaConsumer.subscription();
 				shouldGetSubscriptionList.set(false);
-				return new MethodResult("getSubscriptions", subscriptions);
+				return Optional.of(new MethodResult("getSubscriptions", subscriptions));
 			}
-			return noOpMethodResult;
-
-		}).orElse(noOpMethodResult);
+			return Optional.empty();
+		});
 	}
 
 	private <T> Optional<T> doNotDisturbeOperaton(DoNotDisturbeOperation<T> doNotDisturbeOperation) {
 		try {
 			wakeUpSemaphore.acquireUninterruptibly();
-			return Optional.of(doNotDisturbeOperation.perform());
+			return doNotDisturbeOperation.perform();
 
 		} catch (Exception exception) {
 			LOGGER.error("An error occurred inside thread {}: {}", getName(), exception.getMessage());

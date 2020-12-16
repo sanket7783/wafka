@@ -11,7 +11,9 @@ import org.slf4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.util.*;
+import java.util.Collections;
+import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Future;
 
@@ -87,7 +89,7 @@ public class ConsumerThreadServiceImpl implements IConsumerThreadService {
 	}
 
 	@Override
-	public void subscribe(IConsumerId iConsumerId, Collection<String> topics) {
+	public void subscribe(IConsumerId iConsumerId, Set<String> topics) {
 		AbstractConsumerThread abstractConsumerThread = getConsumerThreadOrThrow(iConsumerId);
 		logger.info("Subscribing to topics {} for consumer {}.", topics, iConsumerId);
 		abstractConsumerThread.updateSubscriptions(topics);

@@ -1,9 +1,8 @@
 package com.wafka.service;
 
-import com.wafka.model.IConsumerId;
 import com.wafka.model.ConsumerThreadSettings;
+import com.wafka.model.IConsumerId;
 
-import java.util.Collection;
 import java.util.Set;
 
 public interface IConsumerThreadService {
@@ -17,7 +16,7 @@ public interface IConsumerThreadService {
 
 	void commitSync(IConsumerId iConsumerId);
 
-	void subscribe(IConsumerId iConsumerId, Collection<String> topics);
+	void subscribe(IConsumerId iConsumerId, Set<String> topics);
 
 	void unsubscribe(IConsumerId iConsumerId);
 
