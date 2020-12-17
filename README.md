@@ -239,3 +239,9 @@ curl -X GET "http://localhost:8787/kafka/consumer/rest/v1/my-consumer-id/fetch?p
 
 In this case, I used the Kafka console producer in order to send a message on the subscribed topic. The binary message
 is visible under the JSON key "fetched_content".
+
+### TODO
+
+1) Write test
+2) More commands!
+3) ....
