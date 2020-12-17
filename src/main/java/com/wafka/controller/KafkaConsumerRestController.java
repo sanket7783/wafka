@@ -185,4 +185,21 @@ public class KafkaConsumerRestController {
 
 		return new ResponseEntity<>(response, HttpStatus.OK);
 	}
+
+    @GetMapping(value = "/{consumerId}/subscriptions", produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<Object> subscriptions(
+			@PathVariable("consumerId") String consumerId) {
+		
+		IConsumerId iConsumerId = iConsumerIdFactory.getConsumerId(consumerId);
+		logger.info("Received subscriptions list request for consumer {}.", iConsumerId);
+
+		Set<String> subscriptions = iManualConsumerOperationService.getSubscriptions(iConsumerId);
+		
+		Map<String, Object> response = new HashMap<>();
+		response.put(CONSUMER_ID_FIELD, consumerId);
+		response.put(MESSAGE_FIELD, "Succesfully fetched subscriptions list");
+		response.put("subscriptions", subscriptions);
+
+		return new ResponseEntity<>(response, HttpStatus.OK);
+	}
 }
