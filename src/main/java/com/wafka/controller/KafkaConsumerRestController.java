@@ -11,6 +11,7 @@ import com.wafka.service.IConsumerService;
 import com.wafka.service.IManualConsumerOperationService;
 import com.wafka.types.ConsumerParameter;
 import com.wafka.types.Protocol;
+import com.wafka.types.ResponseType;
 import io.swagger.annotations.Api;
 import org.slf4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -27,9 +28,7 @@ import java.util.*;
 @RequestMapping("/kafka/consumer/rest/v1")
 @Api(tags = "kafka-consumer-rest-controller", value = "Kafka Consumer REST controller")
 public class KafkaConsumerRestController {
-	private static final String CONSUMER_ID_FIELD = "consumerId";
 	private static final String MESSAGE_FIELD = "message";
-	private static final String DATA_FIELD = "data";
 
 	@Autowired
 	private Logger logger;
@@ -99,7 +98,7 @@ public class KafkaConsumerRestController {
 	}
 
 	@PostMapping(value = "/{consumerId}/subscribe", produces = MediaType.APPLICATION_JSON_VALUE)
-	public ResponseEntity<Object> subscribeTopics(
+	public ResponseEntity<IResponse> subscribeTopics(
 			@PathVariable("consumerId") String consumerId,
 			@RequestBody List<String> topics) {
 
@@ -108,16 +107,14 @@ public class KafkaConsumerRestController {
 
 		iManualConsumerOperationService.subscribe(iConsumerId, new HashSet<>(topics));
 
-		Map<String, Object> response = new HashMap<>();
-		response.put(CONSUMER_ID_FIELD, consumerId);
-		response.put(MESSAGE_FIELD, "Subscriptions updated.");
-		response.put("subscriptions", topics);
+		IResponse iResponse = iResponseFactory.getResponse(iConsumerId,
+				ResponseType.COMMUNICATION, "Subscriptions updated.");
 
-		return new ResponseEntity<>(response, HttpStatus.OK);
+		return new ResponseEntity<>(iResponse, HttpStatus.OK);
 	}
 
 	@GetMapping(value = "/{consumerId}/fetch", produces = MediaType.APPLICATION_JSON_VALUE)
-	public ResponseEntity<Object> fetchData(
+	public ResponseEntity<IResponse> fetchData(
 			@PathVariable("consumerId") String consumerId,
 			@RequestParam("pollDuration") @DefaultValue("1") Integer pollDurationSeconds) {
 
@@ -128,18 +125,13 @@ public class KafkaConsumerRestController {
 				iConsumerId, pollDurationSeconds);
 
 		String responseMessage = fetchedContents.isEmpty() ? "No data to fetch" : "Successfully fetched data.";
-		IResponse iResponse = iResponseFactory.getResponse(responseMessage, fetchedContents);
+		IResponse iResponse = iResponseFactory.getResponse(iConsumerId, responseMessage, fetchedContents);
 
-		Map<String, Object> response = new HashMap<>();
-		response.put(CONSUMER_ID_FIELD, consumerId);
-		response.put(MESSAGE_FIELD, "Successfully fetched data from topics.");
-		response.put(DATA_FIELD, iResponse);
-
-		return new ResponseEntity<>(response, HttpStatus.OK);
+		return new ResponseEntity<>(iResponse, HttpStatus.OK);
 	}
 
 	@GetMapping(value = "/{consumerId}/commitSync", produces = MediaType.APPLICATION_JSON_VALUE)
-	public ResponseEntity<Object> commitSync(
+	public ResponseEntity<IResponse> commitSync(
 			@PathVariable("consumerId") String consumerId) {
 
 		IConsumerId iConsumerId = iConsumerIdFactory.getConsumerId(consumerId);
@@ -147,11 +139,10 @@ public class KafkaConsumerRestController {
 
 		iManualConsumerOperationService.commitSync(iConsumerId);
 
-		Map<String, Object> response = new HashMap<>();
-		response.put(CONSUMER_ID_FIELD, consumerId);
-		response.put(MESSAGE_FIELD, "Committed successfully in sync mode.");
+		IResponse iResponse = iResponseFactory.getResponse(iConsumerId,
+				ResponseType.COMMUNICATION, "Committed successfully in sync mode.");
 
-		return new ResponseEntity<>(response, HttpStatus.OK);
+		return new ResponseEntity<>(iResponse, HttpStatus.OK);
 	}
 
 	@GetMapping(value = "/{consumerId}/stop", produces = MediaType.APPLICATION_JSON_VALUE)
@@ -163,15 +154,14 @@ public class KafkaConsumerRestController {
 
 		iManualConsumerOperationService.stop(iConsumerId);
 
-		Map<String, Object> response = new HashMap<>();
-		response.put(CONSUMER_ID_FIELD, consumerId);
-		response.put(MESSAGE_FIELD, "Successfully stopped consumer.");
+		IResponse iResponse = iResponseFactory.getResponse(iConsumerId,
+				ResponseType.COMMUNICATION, "Successfully stopped consumer.");
 
-		return new ResponseEntity<>(response, HttpStatus.OK);
+		return new ResponseEntity<>(iResponse, HttpStatus.OK);
 	}
 
 	@GetMapping(value = "/{consumerId}/unsubscribe", produces = MediaType.APPLICATION_JSON_VALUE)
-	public ResponseEntity<Object> unsubscribe(
+	public ResponseEntity<IResponse> unsubscribe(
 			@PathVariable("consumerId") String consumerId) {
 
 		IConsumerId iConsumerId = iConsumerIdFactory.getConsumerId(consumerId);
@@ -179,27 +169,24 @@ public class KafkaConsumerRestController {
 
 		iManualConsumerOperationService.unsubscribe(iConsumerId);
 
-		Map<String, Object> response = new HashMap<>();
-		response.put(CONSUMER_ID_FIELD, consumerId);
-		response.put(MESSAGE_FIELD, "Successfully unsubscribed topics.");
+		IResponse iResponse = iResponseFactory.getResponse(iConsumerId,
+				ResponseType.COMMUNICATION, "Successfully unsubscribed topics.");
 
-		return new ResponseEntity<>(response, HttpStatus.OK);
+		return new ResponseEntity<>(iResponse, HttpStatus.OK);
 	}
 
     @GetMapping(value = "/{consumerId}/subscriptions", produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<Object> subscriptions(
+    public ResponseEntity<IResponse> subscriptions(
 			@PathVariable("consumerId") String consumerId) {
 		
 		IConsumerId iConsumerId = iConsumerIdFactory.getConsumerId(consumerId);
 		logger.info("Received subscriptions list request for consumer {}.", iConsumerId);
 
 		Set<String> subscriptions = iManualConsumerOperationService.getSubscriptions(iConsumerId);
-		
-		Map<String, Object> response = new HashMap<>();
-		response.put(CONSUMER_ID_FIELD, consumerId);
-		response.put(MESSAGE_FIELD, "Succesfully fetched subscriptions list");
-		response.put("subscriptions", subscriptions);
 
-		return new ResponseEntity<>(response, HttpStatus.OK);
+		IResponse iResponse = iResponseFactory.getResponse(iConsumerId,
+				"Succesfully fetched subscriptions list.", subscriptions);
+
+		return new ResponseEntity<>(iResponse, HttpStatus.OK);
 	}
 }

@@ -7,7 +7,8 @@ public enum CommandName {
 	STOP_CONSUMER("stop-consumer"),
 	COMMIT_SYNC("commit-sync"),
 	UNSUBSCRIBE("unsubscribe"),
-	LIST_SUBSCRIPTIONS("list-subscriptions");
+	LIST_SUBSCRIPTIONS("list-subscriptions"),
+	SOCKET_CREATED("socket-created");
 
 	private final String description;
 

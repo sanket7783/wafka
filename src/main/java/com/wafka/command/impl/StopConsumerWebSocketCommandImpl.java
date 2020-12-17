@@ -49,10 +49,10 @@ public class StopConsumerWebSocketCommandImpl implements IWebSocketCommand {
 		if (session.isOpen()) {
 			IResponse iResponse;
 			if (operationStatus == OperationStatus.SUCCESS) {
-				iResponse = iResponseFactory.getResponse(ResponseType.COMMUNICATION,
+				iResponse = iResponseFactory.getResponse(iConsumerId, ResponseType.COMMUNICATION,
 						"Successfully stopped consumer {}" + iConsumerId);
 			} else {
-				iResponse = iResponseFactory.getResponse(ResponseType.ERROR,
+				iResponse = iResponseFactory.getResponse(iConsumerId, ResponseType.ERROR,
 						"Failed to stop consumer {}" + iConsumerId);
 			}
 			iWebSocketSenderService.send(session, iResponse);

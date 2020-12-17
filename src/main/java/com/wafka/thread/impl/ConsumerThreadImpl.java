@@ -1,6 +1,7 @@
 package com.wafka.thread.impl;
 
 import com.wafka.model.ConsumerThreadSettings;
+import com.wafka.model.IConsumerId;
 import com.wafka.model.MethodResult;
 import com.wafka.thread.AbstractConsumerThread;
 import com.wafka.thread.IConsumerThreadCallback;
@@ -60,12 +61,13 @@ public class ConsumerThreadImpl extends AbstractConsumerThread {
 	public void run() {
 		IConsumerThreadCallback iWebSocketConsumerCallback = consumerThreadSettings.getiWebSocketConsumerCallback();
 		Duration pollLoopDuration = consumerThreadSettings.getPollLoopDuration();
+		IConsumerId iConsumerId = consumerThreadSettings.getiConsumerIdentifier();
 
 		while (!shouldStopPolling.get()) {
 			try {
 				ConsumerRecords<String, byte[]> consumerRecords = kafkaConsumer.poll(pollLoopDuration);
 				if (!consumerRecords.isEmpty()) {
-					iWebSocketConsumerCallback.onRecordsReceived(consumerRecords);
+					iWebSocketConsumerCallback.onRecordsReceived(iConsumerId, consumerRecords);
 				}
 
 			} catch (WakeupException exception) {
@@ -78,7 +80,7 @@ public class ConsumerThreadImpl extends AbstractConsumerThread {
 				);
 
 			} catch (Exception exception) {
-				iWebSocketConsumerCallback.onConsumerError(exception);
+				iWebSocketConsumerCallback.onConsumerError(iConsumerId, exception);
 			}
 		}
 	}

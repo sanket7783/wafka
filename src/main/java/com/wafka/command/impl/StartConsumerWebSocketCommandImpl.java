@@ -40,10 +40,10 @@ public class StartConsumerWebSocketCommandImpl implements IWebSocketCommand {
 
 		IResponse iResponse;
 		if (operationStatus == OperationStatus.SUCCESS) {
-			iResponse = iResponseFactory.getResponse(ResponseType.COMMUNICATION,
+			iResponse = iResponseFactory.getResponse(iConsumerId, ResponseType.COMMUNICATION,
 					"Successfully started consumer loop for consumer: " + iConsumerId);
 		} else {
-			iResponse = iResponseFactory.getResponse(ResponseType.ERROR,
+			iResponse = iResponseFactory.getResponse(iConsumerId, ResponseType.ERROR,
 					"Error while starting consumer loop for consumer: " + iConsumerId);
 		}
 		iWebSocketSenderService.send(session, iResponse);

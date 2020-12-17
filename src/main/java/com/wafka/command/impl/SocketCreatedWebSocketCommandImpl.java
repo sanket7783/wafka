@@ -1,30 +1,27 @@
 package com.wafka.command.impl;
 
 import com.wafka.command.IWebSocketCommand;
+import com.wafka.exception.MissingCommandArgumentException;
 import com.wafka.factory.IConsumerIdFactory;
 import com.wafka.factory.IResponseFactory;
 import com.wafka.model.CommandParameters;
 import com.wafka.model.IConsumerId;
 import com.wafka.model.IResponse;
 import com.wafka.qualifiers.ConsumerIdProtocol;
-import com.wafka.service.IAutoConsumerOperationService;
 import com.wafka.service.IWebSocketSenderService;
 import com.wafka.types.CommandName;
 import com.wafka.types.Protocol;
+import com.wafka.types.ResponseType;
+import org.slf4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import javax.websocket.Session;
-import java.util.Set;
 
 @Component
-public class ListSubscriptionsWebSocketCommandImpl implements IWebSocketCommand {
+public class SocketCreatedWebSocketCommandImpl implements IWebSocketCommand {
 	@Autowired
-	private IAutoConsumerOperationService iAutoConsumerOperationService;
-
-	@Autowired
-	@ConsumerIdProtocol(Protocol.WEBSOCKET)
-	private IConsumerIdFactory iConsumerIdFactory;
+	private Logger logger;
 
 	@Autowired
 	private IWebSocketSenderService iWebSocketSenderService;
@@ -32,20 +29,25 @@ public class ListSubscriptionsWebSocketCommandImpl implements IWebSocketCommand 
 	@Autowired
 	private IResponseFactory iResponseFactory;
 
-	@Override
-	public void execute(CommandParameters commandParameters, Session session) {
-		IConsumerId iConsumerId = iConsumerIdFactory.getConsumerId(session.getId());
-		Set<String> subscriptions = iAutoConsumerOperationService.getSubscriptions(iConsumerId);
+	@Autowired
+	@ConsumerIdProtocol(Protocol.WEBSOCKET)
+	private IConsumerIdFactory iConsumerIdFactory;
 
-		IResponse iResponse = iResponseFactory.getResponse(iConsumerId,
-				"Succesfully fetched consumer topics.", subscriptions
-		);
+	@Override
+	public void execute(CommandParameters commandParameters, Session session) throws MissingCommandArgumentException {
+		IConsumerId iConsumerId = iConsumerIdFactory.getConsumerId(session.getId());
+
+		logger.info("Established WebSocket connection. Session id {}. When requested, the consumer will have id {}",
+				session.getId(), iConsumerId);
+
+		IResponse iResponse = iResponseFactory.getResponse(iConsumerId, ResponseType.COMMUNICATION,
+				"Connected");
 
 		iWebSocketSenderService.send(session, iResponse);
 	}
 
 	@Override
 	public CommandName getName() {
-		return CommandName.LIST_SUBSCRIPTIONS;
+		return CommandName.SOCKET_CREATED;
 	}
 }

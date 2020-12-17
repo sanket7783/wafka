@@ -56,10 +56,10 @@ public class SubscribeTopicsWebSocketCommandImpl implements IWebSocketCommand {
 
 		IResponse iResponse;
 		if (operationStatus == OperationStatus.SUCCESS) {
-			iResponse = iResponseFactory.getResponse(ResponseType.COMMUNICATION,
+			iResponse = iResponseFactory.getResponse(iConsumerId, ResponseType.COMMUNICATION,
 					"Successfully subscribed to topics: " + topics + " for consumer: " + iConsumerId);
 		} else {
-			iResponse = iResponseFactory.getResponse(ResponseType.ERROR,
+			iResponse = iResponseFactory.getResponse(iConsumerId, ResponseType.ERROR,
 					"Error while subscribing to topics: " + topics + " for consumer: " + iConsumerId);
 		}
 

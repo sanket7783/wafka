@@ -2,6 +2,7 @@ package com.wafka.thread.impl;
 
 import com.wafka.factory.IFetchedContentFactory;
 import com.wafka.factory.IResponseFactory;
+import com.wafka.model.IConsumerId;
 import com.wafka.model.IResponse;
 import com.wafka.service.IWebSocketSenderService;
 import com.wafka.thread.IConsumerThreadCallback;
@@ -36,19 +37,20 @@ public class ConsumerThreadCallbackImpl implements IConsumerThreadCallback {
 	}
 
 	@Override
-	public void onRecordsReceived(ConsumerRecords<String, byte[]> consumerRecords) {
-		IResponse iResponse = iResponseFactory.getResponse("Successfully fetched data",
-				iFetchedContentFactory.getContents(consumerRecords));
+	public void onRecordsReceived(IConsumerId iConsumerId, ConsumerRecords<String, byte[]> consumerRecords) {
+		IResponse iResponse = iResponseFactory.getResponse(iConsumerId, "Successfully fetched data",
+				iFetchedContentFactory.getContents(consumerRecords)
+		);
 
 		iWebSocketSender.send(session, iResponse);
 	}
 
 	@Override
-	public void onConsumerError(Throwable throwable) {
+	public void onConsumerError(IConsumerId iConsumerId, Throwable throwable) {
 		String exceptionMessage = throwable.getMessage();
 		LOGGER.error("An error occurred during consumer loop: {}.", exceptionMessage);
 
-		IResponse iResponse = iResponseFactory.getResponse(ResponseType.ERROR, exceptionMessage);
+		IResponse iResponse = iResponseFactory.getResponse(iConsumerId, ResponseType.ERROR, exceptionMessage);
 		iWebSocketSender.send(session, iResponse);
 	}
 }

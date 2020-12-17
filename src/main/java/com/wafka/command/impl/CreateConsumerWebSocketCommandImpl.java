@@ -87,7 +87,7 @@ public class CreateConsumerWebSocketCommandImpl implements IWebSocketCommand {
 		iConsumerThreadService.create(consumerThreadSettings);
 		iConsumerWebSocketSessionService.store(iConsumerId, session);
 
-		IResponse iResponse = iResponseFactory.getResponse(
+		IResponse iResponse = iResponseFactory.getResponse(iConsumerId,
 				ResponseType.COMMUNICATION, "Kafka async consumer created with id: " + iConsumerId);
 
 		iWebSocketSenderService.send(session, iResponse);
