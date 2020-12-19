@@ -143,7 +143,7 @@ public class KafkaConsumerRestController {
 	}
 
 	@GetMapping(value = "/{consumerId}/stop", produces = MediaType.APPLICATION_JSON_VALUE)
-	public ResponseEntity<Object> stop(
+	public ResponseEntity<IConsumerResponse> stop(
 			@PathVariable("consumerId") String consumerId) {
 
 		ConsumerId iConsumerId = iConsumerIdFactory.getConsumerId(consumerId);
