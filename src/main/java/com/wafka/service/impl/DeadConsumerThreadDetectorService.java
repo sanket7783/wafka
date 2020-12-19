@@ -32,7 +32,7 @@ public class DeadConsumerThreadDetectorService {
 	public void performOperationEveryTwoMinutes() {
 		iConsumerService.getRegisteredConsumers().forEach(iConsumerId -> {
 			if (!iAutoConsumerOperationService.isRunning(iConsumerId) &&
-					iConsumerId.getProtocolType() == Protocol.WEBSOCKET) {
+					iConsumerId.getProtocol() == Protocol.WEBSOCKET) {
 
 				try {
 					OperationStatus stopOperationStatus = iAutoConsumerOperationService.stop(iConsumerId);

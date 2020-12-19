@@ -4,7 +4,7 @@ import com.wafka.exception.ConsumerThreadAlreadyCreatedException;
 import com.wafka.exception.NoSuchConsumerThreadException;
 import com.wafka.factory.IConsumerThreadFactory;
 import com.wafka.model.ConsumerThreadSettings;
-import com.wafka.model.IConsumerId;
+import com.wafka.model.ConsumerId;
 import com.wafka.service.IConsumerThreadService;
 import com.wafka.thread.AbstractConsumerThread;
 import org.slf4j.Logger;
@@ -19,7 +19,7 @@ import java.util.concurrent.Future;
 
 @Service
 public class ConsumerThreadServiceImpl implements IConsumerThreadService {
-	private final Map<IConsumerId, AbstractConsumerThread> consumerThreadMap;
+	private final Map<ConsumerId, AbstractConsumerThread> consumerThreadMap;
 
 	private final Logger logger;
 
@@ -34,81 +34,81 @@ public class ConsumerThreadServiceImpl implements IConsumerThreadService {
 	}
 
 	@Override
-	public void start(IConsumerId iConsumerId) {
-		AbstractConsumerThread abstractConsumerThread = getConsumerThreadOrThrow(iConsumerId);
+	public void start(ConsumerId consumerId) {
+		AbstractConsumerThread abstractConsumerThread = getConsumerThreadOrThrow(consumerId);
 		if (!abstractConsumerThread.isAlive()) {
-			logger.info("Starting async consumer for client {}.", iConsumerId);
+			logger.info("Starting async consumer for client {}.", consumerId);
 			abstractConsumerThread.start();
 		} else {
-			logger.warn("Consumer thread for client {} is already running!", iConsumerId);
+			logger.warn("Consumer thread for client {} is already running!", consumerId);
 		}
 	}
 
 	@Override
 	public void create(ConsumerThreadSettings consumerThreadSettings) {
-		IConsumerId iConsumerId = consumerThreadSettings.getiConsumerIdentifier();
-		if (consumerThreadMap.containsKey(iConsumerId)) {
-			throw new ConsumerThreadAlreadyCreatedException(iConsumerId);
+		ConsumerId consumerId = consumerThreadSettings.getiConsumerIdentifier();
+		if (consumerThreadMap.containsKey(consumerId)) {
+			throw new ConsumerThreadAlreadyCreatedException(consumerId);
 		}
 
 		AbstractConsumerThread abstractConsumerThread = iConsumerThreadFactory.getThread(consumerThreadSettings);
-		consumerThreadMap.put(iConsumerId, abstractConsumerThread);
-		logger.info("Created consumer thread for client {}.", iConsumerId);
+		consumerThreadMap.put(consumerId, abstractConsumerThread);
+		logger.info("Created consumer thread for client {}.", consumerId);
 	}
 
 	@Override
-	public boolean isRunning(IConsumerId iConsumerId) {
-		if (consumerThreadMap.containsKey(iConsumerId)) {
-			AbstractConsumerThread abstractConsumerThread = getConsumerThreadOrThrow(iConsumerId);
+	public boolean isRunning(ConsumerId consumerId) {
+		if (consumerThreadMap.containsKey(consumerId)) {
+			AbstractConsumerThread abstractConsumerThread = getConsumerThreadOrThrow(consumerId);
 			return abstractConsumerThread.isAlive();
 		}
 		return false;
 	}
 
 	@Override
-	public void stop(IConsumerId iConsumerId) {
-		AbstractConsumerThread abstractConsumerThread = getConsumerThreadOrThrow(iConsumerId);
+	public void stop(ConsumerId consumerId) {
+		AbstractConsumerThread abstractConsumerThread = getConsumerThreadOrThrow(consumerId);
 		abstractConsumerThread.stopPolling();
-		logger.info("Consumer {} thread has been stopped.", iConsumerId);
+		logger.info("Consumer {} thread has been stopped.", consumerId);
 
 		try {
 			abstractConsumerThread.join();
-			logger.info("Consumer {} thread has joined.", iConsumerId);
+			logger.info("Consumer {} thread has joined.", consumerId);
 
 		} catch (InterruptedException exception) {
-			logger.warn("Consumer {} thread has been interrupted.", iConsumerId);
+			logger.warn("Consumer {} thread has been interrupted.", consumerId);
 			Thread.currentThread().interrupt();
 
 		} finally {
-			consumerThreadMap.remove(iConsumerId);
-			logger.info("Consumer {} thread has been removed from consumers map.", iConsumerId);
+			consumerThreadMap.remove(consumerId);
+			logger.info("Consumer {} thread has been removed from consumers map.", consumerId);
 		}
 	}
 
 	@Override
-	public void commitSync(IConsumerId iConsumerId) {
-		AbstractConsumerThread abstractConsumerThread = getConsumerThreadOrThrow(iConsumerId);
+	public void commitSync(ConsumerId consumerId) {
+		AbstractConsumerThread abstractConsumerThread = getConsumerThreadOrThrow(consumerId);
 		abstractConsumerThread.commitSync();
 	}
 
 	@Override
-	public void subscribe(IConsumerId iConsumerId, Set<String> topics) {
-		AbstractConsumerThread abstractConsumerThread = getConsumerThreadOrThrow(iConsumerId);
-		logger.info("Subscribing to topics {} for consumer {}.", topics, iConsumerId);
+	public void subscribe(ConsumerId consumerId, Set<String> topics) {
+		AbstractConsumerThread abstractConsumerThread = getConsumerThreadOrThrow(consumerId);
+		logger.info("Subscribing to topics {} for consumer {}.", topics, consumerId);
 		abstractConsumerThread.updateSubscriptions(topics);
 	}
 
 	@Override
-	public void unsubscribe(IConsumerId iConsumerId) {
-		AbstractConsumerThread abstractConsumerThread = getConsumerThreadOrThrow(iConsumerId);
-		logger.info("Unsubscribing consumer {}.", iConsumerId);
+	public void unsubscribe(ConsumerId consumerId) {
+		AbstractConsumerThread abstractConsumerThread = getConsumerThreadOrThrow(consumerId);
+		logger.info("Unsubscribing consumer {}.", consumerId);
 		abstractConsumerThread.unsubscribe();
 	}
 
 	@Override
 	@SuppressWarnings("unchecked cast")
-	public Set<String> getSubscriptions(IConsumerId iConsumerId) {
-		AbstractConsumerThread abstractConsumerThread = getConsumerThreadOrThrow(iConsumerId);
+	public Set<String> getSubscriptions(ConsumerId consumerId) {
+		AbstractConsumerThread abstractConsumerThread = getConsumerThreadOrThrow(consumerId);
 
 		Future<Object> operationFuture = abstractConsumerThread.getSubscriptions();
 		try {
@@ -119,10 +119,10 @@ public class ConsumerThreadServiceImpl implements IConsumerThreadService {
 		}
 	}
 
-	private AbstractConsumerThread getConsumerThreadOrThrow(IConsumerId iConsumerId) {
-		if (!consumerThreadMap.containsKey(iConsumerId)) {
-			throw new NoSuchConsumerThreadException(iConsumerId);
+	private AbstractConsumerThread getConsumerThreadOrThrow(ConsumerId consumerId) {
+		if (!consumerThreadMap.containsKey(consumerId)) {
+			throw new NoSuchConsumerThreadException(consumerId);
 		}
-		return consumerThreadMap.get(iConsumerId);
+		return consumerThreadMap.get(consumerId);
 	}
 }

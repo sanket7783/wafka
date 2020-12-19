@@ -6,13 +6,14 @@ import com.wafka.factory.ICommandFactory;
 import com.wafka.factory.IConsumerIdFactory;
 import com.wafka.factory.IResponseFactory;
 import com.wafka.model.CommandParameters;
-import com.wafka.model.IConsumerId;
+import com.wafka.model.ConsumerId;
 import com.wafka.model.IResponse;
 import com.wafka.qualifiers.CommandFactoryProtocol;
 import com.wafka.qualifiers.ConsumerIdProtocol;
 import com.wafka.service.IWebSocketCommandExecutorService;
 import com.wafka.service.IWebSocketSenderService;
 import com.wafka.types.CommandName;
+import com.wafka.types.OperationStatus;
 import com.wafka.types.Protocol;
 import com.wafka.types.ResponseType;
 import org.slf4j.Logger;
@@ -55,11 +56,11 @@ public class WebSocketCommandExecutorServiceImpl implements IWebSocketCommandExe
 
 	@Override
 	public void onExecutionError(Exception exception, Session session) {
-		IConsumerId iConsumerId = iConsumerIdFactory.getConsumerId(session.getId());
-		logger.error("Exception for consumer {}: {}", iConsumerId, exception.getMessage());
+		ConsumerId consumerId = iConsumerIdFactory.getConsumerId(session.getId());
+		logger.error("Exception for consumer {}: {}", consumerId, exception.getMessage());
 
-		IResponse iResponse = iResponseFactory.getResponse(iConsumerId, ResponseType.ERROR,
-				"An error occurred: " + exception.getMessage());
+		IResponse iResponse = iResponseFactory.getResponse(consumerId, ResponseType.ERROR,
+				"An error occurred: " + exception.getMessage(), OperationStatus.FAIL);
 
 		iWebSocketSenderService.send(session, iResponse);
 	}

@@ -1,11 +1,11 @@
 package com.wafka.exception;
 
-import com.wafka.model.IConsumerId;
+import com.wafka.model.ConsumerId;
 
 public class NoSuchConsumerThreadException extends ApplicationRuntimeException {
 	private static final long serialVersionUID = 8021176989702086896L;
 
-	public NoSuchConsumerThreadException(IConsumerId iConsumerId) {
-		super("No such consumer thread for consumer " + iConsumerId);
+	public NoSuchConsumerThreadException(ConsumerId consumerId) {
+		super("No such consumer thread for consumer " + consumerId);
 	}
 }

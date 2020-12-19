@@ -1,17 +1,21 @@
 package com.wafka.factory;
 
-import com.wafka.model.IConsumerId;
-import com.wafka.model.IFetchedContent;
+import com.wafka.model.ConsumerId;
+import com.wafka.model.FetchedContent;
 import com.wafka.model.IResponse;
+import com.wafka.types.OperationStatus;
 import com.wafka.types.ResponseType;
 
 import java.util.List;
 import java.util.Set;
 
 public interface IResponseFactory {
-	IResponse getResponse(IConsumerId iConsumerId, String message, List<IFetchedContent> fetchedContents);
+	IResponse getResponse(ConsumerId consumerId, String message, List<FetchedContent> fetchedContents,
+						  OperationStatus operationStatus);
 
-	IResponse getResponse(IConsumerId iConsumerId, ResponseType responseType, String message);
+	IResponse getResponse(ConsumerId consumerId, ResponseType responseType, String message,
+						  OperationStatus operationStatus);
 
-	IResponse getResponse(IConsumerId iConsumerId, String message, Set<String> subscriptions);
+	IResponse getResponse(ConsumerId consumerId, String message, Set<String> subscriptions,
+						  OperationStatus operationStatus);
 }

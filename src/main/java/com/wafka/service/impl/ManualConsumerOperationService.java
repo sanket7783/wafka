@@ -1,8 +1,8 @@
 package com.wafka.service.impl;
 
 import com.wafka.factory.IFetchedContentFactory;
-import com.wafka.model.IConsumerId;
-import com.wafka.model.IFetchedContent;
+import com.wafka.model.ConsumerId;
+import com.wafka.model.FetchedContent;
 import com.wafka.service.IConsumerService;
 import com.wafka.service.IManualConsumerOperationService;
 import com.wafka.types.OperationStatus;
@@ -37,60 +37,61 @@ public class ManualConsumerOperationService implements IManualConsumerOperationS
 	}
 
 	@Override
-	public List<IFetchedContent> fetch(IConsumerId iConsumerId, int pollDuration) {
-		KafkaConsumer<String, byte[]> kafkaConsumer = iConsumerService.getConsumerOrThrow(iConsumerId);
+	public List<FetchedContent> fetch(ConsumerId consumerId, int pollDuration) {
+		KafkaConsumer<String, byte[]> kafkaConsumer = iConsumerService.getConsumerOrThrow(consumerId);
+		logger.info("Fetching data for consumer {}.", consumerId);
 
-		logger.info("Fetching data for consumer {}.", iConsumerId);
 		Duration oneSecond = Duration.ofSeconds(pollDuration);
 		ConsumerRecords<String, byte[]> consumerRecords =  kafkaConsumer.poll(oneSecond);
 		return iFetchedContentFactory.getContents(consumerRecords);
 	}
 
 	@Override
-	public OperationStatus subscribe(IConsumerId iConsumerId, Set<String> topics) {
-		return doOperation(iConsumerId, kafkaConsumer -> {
-			logger.info("Subscribing to topics {} for consumer {}.", topics, iConsumerId);
+	public OperationStatus subscribe(ConsumerId consumerId, Set<String> topics) {
+		return doOperation(consumerId, kafkaConsumer -> {
+			logger.info("Subscribing to topics {} for consumer {}.", topics, consumerId);
 			kafkaConsumer.subscribe(topics);
 		});
 	}
 
 	@Override
-	public OperationStatus stop(IConsumerId iConsumerId) {
-		return doOperation(iConsumerId, kafkaConsumer -> {
-			logger.info("Closing Kafka consumer for consumer {}.", iConsumerId);
+	public OperationStatus stop(ConsumerId consumerId) {
+		return doOperation(consumerId, kafkaConsumer -> {
+			logger.info("Closing Kafka consumer for consumer {}.", consumerId);
 			kafkaConsumer.close();
-			iConsumerService.remove(iConsumerId);
+			iConsumerService.remove(consumerId);
 		});
 	}
 
 	@Override
-	public OperationStatus commitSync(IConsumerId iConsumerId) {
-		return doOperation(iConsumerId, kafkaConsumer -> {
-			logger.info("Committing offset sync for consumer {}.", iConsumerId);
+	public OperationStatus commitSync(ConsumerId consumerId) {
+		return doOperation(consumerId, kafkaConsumer -> {
+			logger.info("Committing offset sync for consumer {}.", consumerId);
 			kafkaConsumer.commitSync();
 		});
 	}
 
 	@Override
-	public OperationStatus unsubscribe(IConsumerId iConsumerId) {
-		return doOperation(iConsumerId, kafkaConsumer -> {
-			logger.info("Unsubscribing for consumer {}.", iConsumerId);
+	public OperationStatus unsubscribe(ConsumerId consumerId) {
+		return doOperation(consumerId, kafkaConsumer -> {
+			logger.info("Unsubscribing for consumer {}.", consumerId);
 			kafkaConsumer.unsubscribe();
 		});
 	}
 
 	@Override
-	public Set<String> getSubscriptions(IConsumerId iConsumerId) {
-		logger.info("Getting subscriptions for consumer {}.", iConsumerId);
-		Optional<KafkaConsumer<String, byte[]>> kafkaConsumerOpt = iConsumerService.getConsumer(iConsumerId);
+	public Set<String> getSubscriptions(ConsumerId consumerId) {
+		logger.info("Getting subscriptions for consumer {}.", consumerId);
+		Optional<KafkaConsumer<String, byte[]>> kafkaConsumerOpt = iConsumerService.getConsumer(consumerId);
 		if (!kafkaConsumerOpt.isPresent()) {
+			logger.warn("Consumer {} not found!", consumerId);
 			return new HashSet<>();
 		}
 		return kafkaConsumerOpt.get().subscription();
 	}
 
-	private OperationStatus doOperation(IConsumerId iConsumerId, Consumer<KafkaConsumer<String, byte[]>> consumer) {
-		Optional<KafkaConsumer<String, byte[]>> kafkaConsumerOptional = iConsumerService.getConsumer(iConsumerId);
+	private OperationStatus doOperation(ConsumerId consumerId, Consumer<KafkaConsumer<String, byte[]>> consumer) {
+		Optional<KafkaConsumer<String, byte[]>> kafkaConsumerOptional = iConsumerService.getConsumer(consumerId);
 		if (!kafkaConsumerOptional.isPresent()) {
 			return OperationStatus.FAIL;
 		}

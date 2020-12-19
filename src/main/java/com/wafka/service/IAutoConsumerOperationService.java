@@ -1,10 +1,10 @@
 package com.wafka.service;
 
-import com.wafka.model.IConsumerId;
+import com.wafka.model.ConsumerId;
 import com.wafka.types.OperationStatus;
 
 public interface IAutoConsumerOperationService extends IConsumerOperationService {
-	OperationStatus start(IConsumerId iConsumerId);
+	OperationStatus start(ConsumerId consumerId);
 
-	boolean isRunning(IConsumerId iConsumerId);
+	boolean isRunning(ConsumerId consumerId);
 }

@@ -1,23 +1,26 @@
 package com.wafka.model;
 
+import com.wafka.types.OperationStatus;
 import com.wafka.types.ResponseType;
 
-public class DefaultResponseImpl implements IResponse {
+public class DefaultResponse implements IResponse {
 	private static final long serialVersionUID = -8049545195779798512L;
 
-	private IConsumerId consumerId;
+	private ConsumerId consumerId;
 
 	private ResponseType responseType;
 
 	private String message;
 
+	private OperationStatus operationStatus;
+
 	@Override
-	public void setConsumerId(IConsumerId consumerId) {
+	public void setConsumerId(ConsumerId consumerId) {
 		this.consumerId = consumerId;
 	}
 
 	@Override
-	public IConsumerId getConsumerId() {
+	public ConsumerId getConsumerId() {
 		return consumerId;
 	}
 
@@ -39,5 +42,15 @@ public class DefaultResponseImpl implements IResponse {
 	@Override
 	public String getMessage() {
 		return message;
+	}
+
+	@Override
+	public void setOperationStatus(OperationStatus operationStatus) {
+		this.operationStatus = operationStatus;
+	}
+
+	@Override
+	public OperationStatus getOperationStatus() {
+		return operationStatus;
 	}
 }

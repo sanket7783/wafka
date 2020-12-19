@@ -1,13 +1,14 @@
 package com.wafka.model;
 
+import com.wafka.types.OperationStatus;
 import com.wafka.types.ResponseType;
 
 import java.io.Serializable;
 
 public interface IResponse extends Serializable {
-	void setConsumerId(IConsumerId consumerId);
+	void setConsumerId(ConsumerId consumerId);
 
-	IConsumerId getConsumerId();
+	ConsumerId getConsumerId();
 
 	void setResponseType(ResponseType responseType);
 
@@ -16,4 +17,8 @@ public interface IResponse extends Serializable {
 	void setMessage(String message);
 
 	String getMessage();
+
+	void setOperationStatus(OperationStatus operationStatus);
+
+	OperationStatus getOperationStatus();
 }

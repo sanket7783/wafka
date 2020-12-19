@@ -4,12 +4,13 @@ import com.wafka.command.IWebSocketCommand;
 import com.wafka.factory.IConsumerIdFactory;
 import com.wafka.factory.IResponseFactory;
 import com.wafka.model.CommandParameters;
-import com.wafka.model.IConsumerId;
+import com.wafka.model.ConsumerId;
 import com.wafka.model.IResponse;
 import com.wafka.qualifiers.ConsumerIdProtocol;
 import com.wafka.service.IAutoConsumerOperationService;
 import com.wafka.service.IWebSocketSenderService;
 import com.wafka.types.CommandName;
+import com.wafka.types.OperationStatus;
 import com.wafka.types.Protocol;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -34,11 +35,11 @@ public class ListSubscriptionsWebSocketCommandImpl implements IWebSocketCommand 
 
 	@Override
 	public void execute(CommandParameters commandParameters, Session session) {
-		IConsumerId iConsumerId = iConsumerIdFactory.getConsumerId(session.getId());
-		Set<String> subscriptions = iAutoConsumerOperationService.getSubscriptions(iConsumerId);
+		ConsumerId consumerId = iConsumerIdFactory.getConsumerId(session.getId());
+		Set<String> subscriptions = iAutoConsumerOperationService.getSubscriptions(consumerId);
 
-		IResponse iResponse = iResponseFactory.getResponse(iConsumerId,
-				"Succesfully fetched consumer topics.", subscriptions
+		IResponse iResponse = iResponseFactory.getResponse(consumerId,
+				"Succesfully fetched consumer topics.", subscriptions, OperationStatus.SUCCESS
 		);
 
 		iWebSocketSenderService.send(session, iResponse);

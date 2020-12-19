@@ -1,6 +1,6 @@
 package com.wafka.service.impl;
 
-import com.wafka.model.IConsumerId;
+import com.wafka.model.ConsumerId;
 import com.wafka.service.IConsumerWebSocketSessionService;
 import org.springframework.stereotype.Service;
 
@@ -12,27 +12,27 @@ import java.util.concurrent.ConcurrentHashMap;
 
 @Service
 public class ConsumerWebSocketSessionServiceImpl implements IConsumerWebSocketSessionService {
-	private final Map<IConsumerId, Session> websocketSessionMap;
+	private final Map<ConsumerId, Session> websocketSessionMap;
 
 	public ConsumerWebSocketSessionServiceImpl() {
 		websocketSessionMap = new ConcurrentHashMap<>();
 	}
 
 	@Override
-	public void store(IConsumerId iConsumerId, Session session) {
-		websocketSessionMap.putIfAbsent(iConsumerId, session);
+	public void store(ConsumerId consumerId, Session session) {
+		websocketSessionMap.putIfAbsent(consumerId, session);
 	}
 
 	@Override
-	public void close(IConsumerId iConsumerId, CloseReason closeReason) throws IOException {
-		Session session = websocketSessionMap.get(iConsumerId);
+	public void close(ConsumerId consumerId, CloseReason closeReason) throws IOException {
+		Session session = websocketSessionMap.get(consumerId);
 		if (session != null && session.isOpen()) {
 			session.close(closeReason);
 		}
 	}
 
 	@Override
-	public void delete(IConsumerId iConsumerId) {
-		websocketSessionMap.remove(iConsumerId);
+	public void delete(ConsumerId consumerId) {
+		websocketSessionMap.remove(consumerId);
 	}
 }

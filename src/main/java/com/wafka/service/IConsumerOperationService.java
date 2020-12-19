@@ -1,18 +1,18 @@
 package com.wafka.service;
 
-import com.wafka.model.IConsumerId;
+import com.wafka.model.ConsumerId;
 import com.wafka.types.OperationStatus;
 
 import java.util.Set;
 
 public interface IConsumerOperationService {
-	OperationStatus subscribe(IConsumerId iConsumerId, Set<String> topics);
+	OperationStatus subscribe(ConsumerId consumerId, Set<String> topics);
 
-	OperationStatus stop(IConsumerId iConsumerId);
+	OperationStatus stop(ConsumerId consumerId);
 
-	OperationStatus commitSync(IConsumerId iConsumerId);
+	OperationStatus commitSync(ConsumerId consumerId);
 
-	OperationStatus unsubscribe(IConsumerId iConsumerId);
+	OperationStatus unsubscribe(ConsumerId consumerId);
 
-	Set<String> getSubscriptions(IConsumerId iConsumerId);
+	Set<String> getSubscriptions(ConsumerId consumerId);
 }

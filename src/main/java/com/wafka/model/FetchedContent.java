@@ -3,8 +3,10 @@ package com.wafka.model;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.wafka.serializers.ByteArraySerializer;
 
-public class FetchedContentImpl implements IFetchedContent {
-	private static final long serialVersionUID = 8739209817573570290L;
+import java.io.Serializable;
+
+public class FetchedContent implements Serializable {
+	private static final long serialVersionUID = -6311943260244362539L;
 
 	private final String key;
 
@@ -16,7 +18,7 @@ public class FetchedContentImpl implements IFetchedContent {
 
 	private final long offset;
 
-	public FetchedContentImpl(String key, byte[] content, String topic, int partition, long offset) {
+	public FetchedContent(String key, byte[] content, String topic, int partition, long offset) {
 		this.key = key;
 		this.content = content;
 		this.topic = topic;
@@ -24,28 +26,23 @@ public class FetchedContentImpl implements IFetchedContent {
 		this.offset = offset;
 	}
 
-	@Override
 	public String getKey() {
 		return key;
 	}
 
-	@Override
 	@JsonSerialize(using = ByteArraySerializer.class)
 	public byte[] getContent() {
 		return content;
 	}
 
-	@Override
 	public String getTopic() {
 		return topic;
 	}
 
-	@Override
 	public int getPartition() {
 		return partition;
 	}
 
-	@Override
 	public long getOffset() {
 		return offset;
 	}

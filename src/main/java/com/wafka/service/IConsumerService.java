@@ -1,6 +1,6 @@
 package com.wafka.service;
 
-import com.wafka.model.IConsumerId;
+import com.wafka.model.ConsumerId;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
 
 import java.util.Optional;
@@ -8,13 +8,13 @@ import java.util.Properties;
 import java.util.Set;
 
 public interface IConsumerService {
-	void create(IConsumerId iConsumerId, Properties consumerProperties);
+	void create(ConsumerId consumerId, Properties consumerProperties);
 
-	void remove(IConsumerId iConsumerId);
+	void remove(ConsumerId consumerId);
 
-	Optional<KafkaConsumer<String, byte[]>> getConsumer(IConsumerId iConsumerId);
+	Optional<KafkaConsumer<String, byte[]>> getConsumer(ConsumerId consumerId);
 
-	KafkaConsumer<String, byte[]> getConsumerOrThrow(IConsumerId iConsumerId);
+	KafkaConsumer<String, byte[]> getConsumerOrThrow(ConsumerId consumerId);
 
-	Set<IConsumerId> getRegisteredConsumers();
+	Set<ConsumerId> getRegisteredConsumers();
 }

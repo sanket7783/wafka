@@ -8,7 +8,7 @@ import java.time.Duration;
 public class ConsumerThreadSettings {
 	private IConsumerThreadCallback iWebSocketConsumerCallback;
 
-	private IConsumerId iConsumerId;
+	private ConsumerId consumerId;
 
 	private Duration pollLoopDuration;
 
@@ -26,12 +26,12 @@ public class ConsumerThreadSettings {
 		this.iWebSocketConsumerCallback = iWebSocketConsumerCallback;
 	}
 
-	public IConsumerId getiConsumerIdentifier() {
-		return iConsumerId;
+	public ConsumerId getiConsumerIdentifier() {
+		return consumerId;
 	}
 
-	public void setiConsumerIdentifier(IConsumerId iConsumerId) {
-		this.iConsumerId = iConsumerId;
+	public void setiConsumerIdentifier(ConsumerId consumerId) {
+		this.consumerId = consumerId;
 	}
 
 	public Duration getPollLoopDuration() {

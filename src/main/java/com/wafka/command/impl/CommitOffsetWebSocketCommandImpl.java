@@ -3,7 +3,7 @@ package com.wafka.command.impl;
 import com.wafka.command.IWebSocketCommand;
 import com.wafka.factory.IConsumerIdFactory;
 import com.wafka.model.CommandParameters;
-import com.wafka.model.IConsumerId;
+import com.wafka.model.ConsumerId;
 import com.wafka.qualifiers.ConsumerIdProtocol;
 import com.wafka.service.IAutoConsumerOperationService;
 import com.wafka.types.CommandName;
@@ -24,8 +24,8 @@ public class CommitOffsetWebSocketCommandImpl implements IWebSocketCommand {
 
 	@Override
 	public void execute(CommandParameters commandParameters, Session session) {
-		IConsumerId iConsumerId = iConsumerIdFactory.getConsumerId(session.getId());
-		iAutoConsumerOperationService.commitSync(iConsumerId);
+		ConsumerId consumerId = iConsumerIdFactory.getConsumerId(session.getId());
+		iAutoConsumerOperationService.commitSync(consumerId);
 	}
 
 	@Override

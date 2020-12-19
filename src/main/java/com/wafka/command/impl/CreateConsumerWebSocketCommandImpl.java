@@ -7,7 +7,7 @@ import com.wafka.factory.IFetchedContentFactory;
 import com.wafka.factory.IResponseFactory;
 import com.wafka.model.CommandParameters;
 import com.wafka.model.ConsumerThreadSettings;
-import com.wafka.model.IConsumerId;
+import com.wafka.model.ConsumerId;
 import com.wafka.model.IResponse;
 import com.wafka.qualifiers.ConsumerIdProtocol;
 import com.wafka.service.IConsumerService;
@@ -16,10 +16,7 @@ import com.wafka.service.IConsumerWebSocketSessionService;
 import com.wafka.service.IWebSocketSenderService;
 import com.wafka.thread.IConsumerThreadCallback;
 import com.wafka.thread.impl.ConsumerThreadCallbackImpl;
-import com.wafka.types.CommandName;
-import com.wafka.types.ConsumerParameter;
-import com.wafka.types.Protocol;
-import com.wafka.types.ResponseType;
+import com.wafka.types.*;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -60,14 +57,14 @@ public class CreateConsumerWebSocketCommandImpl implements IWebSocketCommand {
 	public void execute(CommandParameters commandParameters, Session session) {
 		Map<ConsumerParameter, Object> parametersMap = commandParameters.getArguments();
 
-		IConsumerId iConsumerId = iConsumerIdFactory.getConsumerId(session.getId());
+		ConsumerId consumerId = iConsumerIdFactory.getConsumerId(session.getId());
 
 		// Create physical consumer.
 		Properties consumerProperties = iConsumerPropertyFactory.getProperties(parametersMap);
-		iConsumerService.create(iConsumerId, consumerProperties);
+		iConsumerService.create(consumerId, consumerProperties);
 
 		// Create consumer thread (only creation, the thread will not be started)
-		KafkaConsumer<String, byte[]> kafkaConsumer = iConsumerService.getConsumerOrThrow(iConsumerId);
+		KafkaConsumer<String, byte[]> kafkaConsumer = iConsumerService.getConsumerOrThrow(consumerId);
 
 		IConsumerThreadCallback iWebSocketConsumerCallback = new ConsumerThreadCallbackImpl(
 				session, iFetchedContentFactory, iResponseFactory, iWebSocketSenderService
@@ -75,7 +72,7 @@ public class CreateConsumerWebSocketCommandImpl implements IWebSocketCommand {
 
 		ConsumerThreadSettings consumerThreadSettings = new ConsumerThreadSettings();
 		consumerThreadSettings.setiWebSocketConsumerCallback(iWebSocketConsumerCallback);
-		consumerThreadSettings.setiConsumerIdentifier(iConsumerId);
+		consumerThreadSettings.setiConsumerIdentifier(consumerId);
 		consumerThreadSettings.setWrappedConsumer(kafkaConsumer);
 
 		Object pollDuration = parametersMap.get(ConsumerParameter.POLL_DURATION);
@@ -85,10 +82,10 @@ public class CreateConsumerWebSocketCommandImpl implements IWebSocketCommand {
 		}
 
 		iConsumerThreadService.create(consumerThreadSettings);
-		iConsumerWebSocketSessionService.store(iConsumerId, session);
+		iConsumerWebSocketSessionService.store(consumerId, session);
 
-		IResponse iResponse = iResponseFactory.getResponse(iConsumerId,
-				ResponseType.COMMUNICATION, "Kafka async consumer created with id: " + iConsumerId);
+		IResponse iResponse = iResponseFactory.getResponse(consumerId, ResponseType.COMMUNICATION,
+				"Kafka async consumer created with id: " + consumerId, OperationStatus.SUCCESS);
 
 		iWebSocketSenderService.send(session, iResponse);
 	}

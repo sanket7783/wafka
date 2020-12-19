@@ -2,31 +2,42 @@ package com.wafka.model;
 
 import com.wafka.types.Protocol;
 
+import java.io.Serializable;
 import java.util.Objects;
 
-public class ConsumerIdImpl implements IConsumerId {
+public class ConsumerId implements Serializable {
 	private static final long serialVersionUID = -8662939182587591266L;
 
-	private final String identifier;
+	private String identifier;
 
-	private final Protocol protocol;
+	private Protocol protocol;
 
-	public ConsumerIdImpl(String identifier, Protocol protocol) {
+	public ConsumerId() {
+		this.identifier = null;
+		this.protocol = null;
+	}
+
+	public ConsumerId(String identifier, Protocol protocol) {
 		this.identifier = identifier;
 		this.protocol = protocol;
 	}
 
-	@Override
+	public void setIdentifier(String identifier) {
+		this.identifier = identifier;
+	}
+
+	public void setProtocol(Protocol protocol) {
+		this.protocol = protocol;
+	}
+
 	public String getIdentifier() {
 		return identifier;
 	}
 
-	@Override
-	public Protocol getProtocolType() {
+	public Protocol getProtocol() {
 		return protocol;
 	}
 
-	@Override
 	public String toString() {
 		return identifier;
 	}
@@ -35,7 +46,7 @@ public class ConsumerIdImpl implements IConsumerId {
 	public boolean equals(Object o) {
 		if (this == o) return true;
 		if (o == null || getClass() != o.getClass()) return false;
-		ConsumerIdImpl that = (ConsumerIdImpl) o;
+		ConsumerId that = (ConsumerId) o;
 		return identifier.equals(that.identifier);
 	}
 

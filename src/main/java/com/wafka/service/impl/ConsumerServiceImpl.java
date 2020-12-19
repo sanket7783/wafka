@@ -2,7 +2,7 @@ package com.wafka.service.impl;
 
 import com.wafka.exception.ConsumerAlreadyCreatedException;
 import com.wafka.exception.NoSuchConsumerException;
-import com.wafka.model.IConsumerId;
+import com.wafka.model.ConsumerId;
 import com.wafka.service.IConsumerService;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
 import org.slf4j.Logger;
@@ -14,7 +14,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 @Service
 public class ConsumerServiceImpl implements IConsumerService {
-	private final Map<IConsumerId, KafkaConsumer<String, byte[]>> kafkaConsumersMap;
+	private final Map<ConsumerId, KafkaConsumer<String, byte[]>> kafkaConsumersMap;
 
 	private final Logger logger;
 
@@ -26,41 +26,41 @@ public class ConsumerServiceImpl implements IConsumerService {
 	}
 
 	@Override
-	public void create(IConsumerId iConsumerId, Properties consumerProperties) {
-		if (kafkaConsumersMap.containsKey(iConsumerId)) {
-			throw new ConsumerAlreadyCreatedException(iConsumerId);
+	public void create(ConsumerId consumerId, Properties consumerProperties) {
+		if (kafkaConsumersMap.containsKey(consumerId)) {
+			throw new ConsumerAlreadyCreatedException(consumerId);
 		}
 
 		KafkaConsumer<String, byte[]> kafkaConsumer = new KafkaConsumer<>(consumerProperties);
-		kafkaConsumersMap.put(iConsumerId, kafkaConsumer);
-		logger.info("Created Kafka consumer {}.", iConsumerId);
+		kafkaConsumersMap.put(consumerId, kafkaConsumer);
+		logger.info("Created Kafka consumer {}.", consumerId);
 	}
 
 	@Override
-	public void remove(IConsumerId iConsumerId) {
-		logger.info("Removing consumer {} from consumers map.", iConsumerId);
-		kafkaConsumersMap.remove(iConsumerId);
+	public void remove(ConsumerId consumerId) {
+		logger.info("Removing consumer {} from consumers map.", consumerId);
+		kafkaConsumersMap.remove(consumerId);
 	}
 
 	@Override
-	public Optional<KafkaConsumer<String, byte[]>> getConsumer(IConsumerId iConsumerId) {
-		if (!kafkaConsumersMap.containsKey(iConsumerId)) {
+	public Optional<KafkaConsumer<String, byte[]>> getConsumer(ConsumerId consumerId) {
+		if (!kafkaConsumersMap.containsKey(consumerId)) {
 			return Optional.empty();
 		}
-		return Optional.of(kafkaConsumersMap.get(iConsumerId));
+		return Optional.of(kafkaConsumersMap.get(consumerId));
 	}
 
 	@Override
-	public KafkaConsumer<String, byte[]> getConsumerOrThrow(IConsumerId iConsumerId) {
-		Optional<KafkaConsumer<String, byte[]>> kafkaConsumerOptional = getConsumer(iConsumerId);
+	public KafkaConsumer<String, byte[]> getConsumerOrThrow(ConsumerId consumerId) {
+		Optional<KafkaConsumer<String, byte[]>> kafkaConsumerOptional = getConsumer(consumerId);
 		if (!kafkaConsumerOptional.isPresent()) {
-			throw new NoSuchConsumerException(iConsumerId);
+			throw new NoSuchConsumerException(consumerId);
 		}
 		return kafkaConsumerOptional.get();
 	}
 
 	@Override
-	public Set<IConsumerId> getRegisteredConsumers() {
+	public Set<ConsumerId> getRegisteredConsumers() {
 		return Collections.unmodifiableSet(kafkaConsumersMap.keySet());
 	}
 }

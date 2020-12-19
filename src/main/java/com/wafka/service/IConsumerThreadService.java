@@ -1,24 +1,24 @@
 package com.wafka.service;
 
 import com.wafka.model.ConsumerThreadSettings;
-import com.wafka.model.IConsumerId;
+import com.wafka.model.ConsumerId;
 
 import java.util.Set;
 
 public interface IConsumerThreadService {
-	void start(IConsumerId iConsumerId);
+	void start(ConsumerId consumerId);
 
 	void create(ConsumerThreadSettings consumerThreadSettings);
 
-	boolean isRunning(IConsumerId iConsumerId);
+	boolean isRunning(ConsumerId consumerId);
 
-	void stop(IConsumerId iConsumerId);
+	void stop(ConsumerId consumerId);
 
-	void commitSync(IConsumerId iConsumerId);
+	void commitSync(ConsumerId consumerId);
 
-	void subscribe(IConsumerId iConsumerId, Set<String> topics);
+	void subscribe(ConsumerId consumerId, Set<String> topics);
 
-	void unsubscribe(IConsumerId iConsumerId);
+	void unsubscribe(ConsumerId consumerId);
 
-	Set<String> getSubscriptions(IConsumerId iConsumerId);
+	Set<String> getSubscriptions(ConsumerId consumerId);
 }

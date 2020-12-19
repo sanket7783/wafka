@@ -6,7 +6,7 @@ import com.wafka.exception.MissingCommandArgumentException;
 import com.wafka.factory.IConsumerIdFactory;
 import com.wafka.factory.IResponseFactory;
 import com.wafka.model.CommandParameters;
-import com.wafka.model.IConsumerId;
+import com.wafka.model.ConsumerId;
 import com.wafka.model.IResponse;
 import com.wafka.qualifiers.ConsumerIdProtocol;
 import com.wafka.service.IAutoConsumerOperationService;
@@ -51,17 +51,18 @@ public class SubscribeTopicsWebSocketCommandImpl implements IWebSocketCommand {
 			throw new InvalidTopicListArgumentException();
 		}
 
-		IConsumerId iConsumerId = iConsumerIdFactory.getConsumerId(session.getId());
-		OperationStatus operationStatus = iAutoConsumerOperationService.subscribe(iConsumerId, topics);
+		ConsumerId consumerId = iConsumerIdFactory.getConsumerId(session.getId());
+		OperationStatus operationStatus = iAutoConsumerOperationService.subscribe(consumerId, topics);
 
-		IResponse iResponse;
+		String message;
 		if (operationStatus == OperationStatus.SUCCESS) {
-			iResponse = iResponseFactory.getResponse(iConsumerId, ResponseType.COMMUNICATION,
-					"Successfully subscribed to topics: " + topics + " for consumer: " + iConsumerId);
+			message = "Successfully subscribed to topics: " + topics + " for consumer: " + consumerId;
 		} else {
-			iResponse = iResponseFactory.getResponse(iConsumerId, ResponseType.ERROR,
-					"Error while subscribing to topics: " + topics + " for consumer: " + iConsumerId);
+			message = "Error while subscribing to topics: " + topics + " for consumer: " + consumerId;
 		}
+
+		IResponse iResponse = iResponseFactory.getResponse(consumerId, ResponseType.COMMUNICATION,
+				message, operationStatus);
 
 		iWebSocketSenderService.send(session, iResponse);
 	}

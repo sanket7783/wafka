@@ -4,7 +4,7 @@ import com.wafka.command.IWebSocketCommand;
 import com.wafka.factory.IConsumerIdFactory;
 import com.wafka.factory.IResponseFactory;
 import com.wafka.model.CommandParameters;
-import com.wafka.model.IConsumerId;
+import com.wafka.model.ConsumerId;
 import com.wafka.model.IResponse;
 import com.wafka.qualifiers.ConsumerIdProtocol;
 import com.wafka.service.IAutoConsumerOperationService;
@@ -35,17 +35,18 @@ public class UnsubscribeWebSocketCommandImpl implements IWebSocketCommand {
 
 	@Override
 	public void execute(CommandParameters commandParameters, Session session) {
-		IConsumerId iConsumerId = iConsumerIdFactory.getConsumerId(session.getId());
-		OperationStatus operationStatus = iAutoConsumerOperationService.unsubscribe(iConsumerId);
+		ConsumerId consumerId = iConsumerIdFactory.getConsumerId(session.getId());
+		OperationStatus operationStatus = iAutoConsumerOperationService.unsubscribe(consumerId);
 
-		IResponse iResponse;
+		String message;
 		if (operationStatus == OperationStatus.SUCCESS) {
-			iResponse = iResponseFactory.getResponse(iConsumerId, ResponseType.COMMUNICATION,
-					"Successfully unsubscribed consumer " + iConsumerId);
+			message = "Successfully unsubscribed consumer " + consumerId;
 		} else {
-			iResponse = iResponseFactory.getResponse(iConsumerId, ResponseType.ERROR,
-					"Failed to unsubscribe consumer " + iConsumerId);
+			message = "Failed to unsubscribe consumer " + consumerId;
 		}
+
+		IResponse iResponse = iResponseFactory.getResponse(consumerId, ResponseType.ERROR,
+				message, operationStatus);
 
 		iWebSocketSenderService.send(session, iResponse);
 	}
