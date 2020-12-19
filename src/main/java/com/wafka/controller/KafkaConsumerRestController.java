@@ -94,7 +94,7 @@ public class KafkaConsumerRestController {
 
 		response.put(MESSAGE_FIELD, "Consumer successfully created.");
 
-		return new ResponseEntity<>(response, HttpStatus.OK);
+		return new ResponseEntity<>(response, HttpStatus.CREATED);
 	}
 
 	@PostMapping(value = "/{consumerId}/subscribe", produces = MediaType.APPLICATION_JSON_VALUE)
