@@ -167,8 +167,7 @@ curl -X POST "http://localhost:8787/kafka/consumer/rest/v1/my-consumer-id/my-gro
     "consumerId": "my-consumer-id",
     "kafkaClusterUri": "localhost:9092",
     "groupId": "my-group-id",
-    "enableAutoCommit": true,
-    "message": "Consumer successfully created."
+    "enableAutoCommit": true
 }
 ```
 
@@ -188,8 +187,7 @@ curl -X POST -H "Content-Type: application/json" --data '["testing-topic"]' http
     "subscriptions": [
         "testing-topic"
     ],
-    "consumerId": "my-consumer-id",
-    "message": "Subscriptions updated."
+    "consumerId": "my-consumer-id"
 }
 ```
 
@@ -208,7 +206,6 @@ curl -X GET "http://localhost:8787/kafka/consumer/rest/v1/my-consumer-id/fetch?p
 {
     "data": {
         "responseType": "INCOMING_DATA",
-        "message": "Successfully fetched data.",
         "fetchedContents": [
             {
                 "key": null,
