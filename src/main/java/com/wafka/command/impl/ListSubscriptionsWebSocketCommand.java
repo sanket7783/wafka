@@ -5,21 +5,21 @@ import com.wafka.factory.IConsumerIdFactory;
 import com.wafka.factory.IResponseFactory;
 import com.wafka.model.CommandParameters;
 import com.wafka.model.ConsumerId;
-import com.wafka.model.IResponse;
+import com.wafka.model.response.IConsumerResponse;
 import com.wafka.qualifiers.ConsumerIdProtocol;
 import com.wafka.service.IAutoConsumerOperationService;
 import com.wafka.service.IWebSocketSenderService;
 import com.wafka.types.CommandName;
 import com.wafka.types.OperationStatus;
 import com.wafka.types.Protocol;
-import com.wafka.types.ResponseType;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import javax.websocket.Session;
+import java.util.Set;
 
 @Component
-public class UnsubscribeWebSocketCommandImpl implements IWebSocketCommand {
+public class ListSubscriptionsWebSocketCommand implements IWebSocketCommand {
 	@Autowired
 	private IAutoConsumerOperationService iAutoConsumerOperationService;
 
@@ -28,31 +28,24 @@ public class UnsubscribeWebSocketCommandImpl implements IWebSocketCommand {
 	private IConsumerIdFactory iConsumerIdFactory;
 
 	@Autowired
-	private IResponseFactory iResponseFactory;
+	private IWebSocketSenderService iWebSocketSenderService;
 
 	@Autowired
-	private IWebSocketSenderService iWebSocketSenderService;
+	private IResponseFactory iResponseFactory;
 
 	@Override
 	public void execute(CommandParameters commandParameters, Session session) {
 		ConsumerId consumerId = iConsumerIdFactory.getConsumerId(session.getId());
-		OperationStatus operationStatus = iAutoConsumerOperationService.unsubscribe(consumerId);
+		Set<String> subscriptions = iAutoConsumerOperationService.getSubscriptions(consumerId);
 
-		String message;
-		if (operationStatus == OperationStatus.SUCCESS) {
-			message = "Successfully unsubscribed consumer " + consumerId;
-		} else {
-			message = "Failed to unsubscribe consumer " + consumerId;
-		}
+		IConsumerResponse iConsumerResponse = iResponseFactory.getResponse(consumerId, subscriptions,
+				OperationStatus.SUCCESS);
 
-		IResponse iResponse = iResponseFactory.getResponse(consumerId, ResponseType.ERROR,
-				message, operationStatus);
-
-		iWebSocketSenderService.send(session, iResponse);
+		iWebSocketSenderService.send(session, iConsumerResponse);
 	}
 
 	@Override
 	public CommandName getName() {
-		return CommandName.UNSUBSCRIBE;
+		return CommandName.LIST_SUBSCRIPTIONS;
 	}
 }

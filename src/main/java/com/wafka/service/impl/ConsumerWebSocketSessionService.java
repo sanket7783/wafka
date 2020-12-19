@@ -11,10 +11,10 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 @Service
-public class ConsumerWebSocketSessionServiceImpl implements IConsumerWebSocketSessionService {
+public class ConsumerWebSocketSessionService implements IConsumerWebSocketSessionService {
 	private final Map<ConsumerId, Session> websocketSessionMap;
 
-	public ConsumerWebSocketSessionServiceImpl() {
+	public ConsumerWebSocketSessionService() {
 		websocketSessionMap = new ConcurrentHashMap<>();
 	}
 

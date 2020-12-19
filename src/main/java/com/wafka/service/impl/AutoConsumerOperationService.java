@@ -16,7 +16,7 @@ import java.util.Set;
 import java.util.function.Consumer;
 
 @Service
-public class AutoConsumerOperationServiceImpl implements IAutoConsumerOperationService {
+public class AutoConsumerOperationService implements IAutoConsumerOperationService {
 	private final Logger logger;
 
 	private final IConsumerService iConsumerService;
@@ -24,8 +24,8 @@ public class AutoConsumerOperationServiceImpl implements IAutoConsumerOperationS
 	private final IConsumerThreadService iConsumerThreadService;
 
 	@Autowired
-	public AutoConsumerOperationServiceImpl(Logger logger, IConsumerService iConsumerService,
-											IConsumerThreadService iConsumerThreadService) {
+	public AutoConsumerOperationService(Logger logger, IConsumerService iConsumerService,
+										IConsumerThreadService iConsumerThreadService) {
 
 		this.logger = logger;
 		this.iConsumerService = iConsumerService;

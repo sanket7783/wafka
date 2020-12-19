@@ -1,19 +1,21 @@
-package com.wafka.model;
+package com.wafka.model.response;
+
+import com.wafka.model.FetchedContent;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-public class FetchDataResponse extends DefaultResponse {
+public class FetchDataConsumerResponse extends ConsumerResponse {
 	private static final long serialVersionUID = -6103467784487403800L;
 
 	private final List<FetchedContent> fetchedContents;
 
-	public FetchDataResponse() {
+	public FetchDataConsumerResponse() {
 		this.fetchedContents = new ArrayList<>();
 	}
 
-	public FetchDataResponse(List<FetchedContent> fetchedContents) {
+	public FetchDataConsumerResponse(List<FetchedContent> fetchedContents) {
 		this.fetchedContents = fetchedContents;
 	}
 

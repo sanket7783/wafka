@@ -7,7 +7,7 @@ import com.wafka.factory.IConsumerIdFactory;
 import com.wafka.factory.IResponseFactory;
 import com.wafka.model.CommandParameters;
 import com.wafka.model.ConsumerId;
-import com.wafka.model.IResponse;
+import com.wafka.model.response.IConsumerResponse;
 import com.wafka.qualifiers.ConsumerIdProtocol;
 import com.wafka.service.IAutoConsumerOperationService;
 import com.wafka.service.IWebSocketSenderService;
@@ -22,7 +22,7 @@ import java.util.Optional;
 import java.util.Set;
 
 @Component
-public class SubscribeTopicsWebSocketCommandImpl implements IWebSocketCommand {
+public class SubscribeTopicsWebSocketCommand implements IWebSocketCommand {
 	@Autowired
 	private IAutoConsumerOperationService iAutoConsumerOperationService;
 
@@ -54,17 +54,10 @@ public class SubscribeTopicsWebSocketCommandImpl implements IWebSocketCommand {
 		ConsumerId consumerId = iConsumerIdFactory.getConsumerId(session.getId());
 		OperationStatus operationStatus = iAutoConsumerOperationService.subscribe(consumerId, topics);
 
-		String message;
-		if (operationStatus == OperationStatus.SUCCESS) {
-			message = "Successfully subscribed to topics: " + topics + " for consumer: " + consumerId;
-		} else {
-			message = "Error while subscribing to topics: " + topics + " for consumer: " + consumerId;
-		}
+		IConsumerResponse iConsumerResponse = iResponseFactory.getResponse(consumerId,
+				ResponseType.COMMUNICATION, operationStatus);
 
-		IResponse iResponse = iResponseFactory.getResponse(consumerId, ResponseType.COMMUNICATION,
-				message, operationStatus);
-
-		iWebSocketSenderService.send(session, iResponse);
+		iWebSocketSenderService.send(session, iConsumerResponse);
 	}
 
 	@Override

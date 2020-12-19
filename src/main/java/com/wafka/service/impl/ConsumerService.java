@@ -13,13 +13,13 @@ import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 @Service
-public class ConsumerServiceImpl implements IConsumerService {
+public class ConsumerService implements IConsumerService {
 	private final Map<ConsumerId, KafkaConsumer<String, byte[]>> kafkaConsumersMap;
 
 	private final Logger logger;
 
 	@Autowired
-	public ConsumerServiceImpl(Logger logger) {
+	public ConsumerService(Logger logger) {
 		this.logger = logger;
 
 		kafkaConsumersMap = new ConcurrentHashMap<>();

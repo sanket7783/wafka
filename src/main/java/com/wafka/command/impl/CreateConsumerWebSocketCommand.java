@@ -8,14 +8,14 @@ import com.wafka.factory.IResponseFactory;
 import com.wafka.model.CommandParameters;
 import com.wafka.model.ConsumerThreadSettings;
 import com.wafka.model.ConsumerId;
-import com.wafka.model.IResponse;
+import com.wafka.model.response.IConsumerResponse;
 import com.wafka.qualifiers.ConsumerIdProtocol;
 import com.wafka.service.IConsumerService;
 import com.wafka.service.IConsumerThreadService;
 import com.wafka.service.IConsumerWebSocketSessionService;
 import com.wafka.service.IWebSocketSenderService;
 import com.wafka.thread.IConsumerThreadCallback;
-import com.wafka.thread.impl.ConsumerThreadCallbackImpl;
+import com.wafka.thread.impl.ConsumerThreadCallback;
 import com.wafka.types.*;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -27,7 +27,7 @@ import java.util.Map;
 import java.util.Properties;
 
 @Component
-public class CreateConsumerWebSocketCommandImpl implements IWebSocketCommand {
+public class CreateConsumerWebSocketCommand implements IWebSocketCommand {
 	@Autowired
 	private IConsumerService iConsumerService;
 
@@ -66,7 +66,7 @@ public class CreateConsumerWebSocketCommandImpl implements IWebSocketCommand {
 		// Create consumer thread (only creation, the thread will not be started)
 		KafkaConsumer<String, byte[]> kafkaConsumer = iConsumerService.getConsumerOrThrow(consumerId);
 
-		IConsumerThreadCallback iWebSocketConsumerCallback = new ConsumerThreadCallbackImpl(
+		IConsumerThreadCallback iWebSocketConsumerCallback = new ConsumerThreadCallback(
 				session, iFetchedContentFactory, iResponseFactory, iWebSocketSenderService
 		);
 
@@ -84,10 +84,10 @@ public class CreateConsumerWebSocketCommandImpl implements IWebSocketCommand {
 		iConsumerThreadService.create(consumerThreadSettings);
 		iConsumerWebSocketSessionService.store(consumerId, session);
 
-		IResponse iResponse = iResponseFactory.getResponse(consumerId, ResponseType.COMMUNICATION,
-				"Kafka async consumer created with id: " + consumerId, OperationStatus.SUCCESS);
+		IConsumerResponse iConsumerResponse = iResponseFactory.getResponse(consumerId,
+				ResponseType.COMMUNICATION, OperationStatus.SUCCESS);
 
-		iWebSocketSenderService.send(session, iResponse);
+		iWebSocketSenderService.send(session, iConsumerResponse);
 	}
 
 	@Override

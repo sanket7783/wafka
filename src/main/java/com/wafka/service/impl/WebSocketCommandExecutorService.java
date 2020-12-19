@@ -7,7 +7,7 @@ import com.wafka.factory.IConsumerIdFactory;
 import com.wafka.factory.IResponseFactory;
 import com.wafka.model.CommandParameters;
 import com.wafka.model.ConsumerId;
-import com.wafka.model.IResponse;
+import com.wafka.model.response.IConsumerResponse;
 import com.wafka.qualifiers.CommandFactoryProtocol;
 import com.wafka.qualifiers.ConsumerIdProtocol;
 import com.wafka.service.IWebSocketCommandExecutorService;
@@ -23,7 +23,7 @@ import org.springframework.stereotype.Service;
 import javax.websocket.Session;
 
 @Service
-public class WebSocketCommandExecutorServiceImpl implements IWebSocketCommandExecutorService {
+public class WebSocketCommandExecutorService implements IWebSocketCommandExecutorService {
 	@Autowired
 	private Logger logger;
 
@@ -59,9 +59,9 @@ public class WebSocketCommandExecutorServiceImpl implements IWebSocketCommandExe
 		ConsumerId consumerId = iConsumerIdFactory.getConsumerId(session.getId());
 		logger.error("Exception for consumer {}: {}", consumerId, exception.getMessage());
 
-		IResponse iResponse = iResponseFactory.getResponse(consumerId, ResponseType.ERROR,
-				"An error occurred: " + exception.getMessage(), OperationStatus.FAIL);
+		IConsumerResponse iConsumerResponse = iResponseFactory.getResponse(consumerId,
+				ResponseType.ERROR, OperationStatus.FAIL);
 
-		iWebSocketSenderService.send(session, iResponse);
+		iWebSocketSenderService.send(session, iConsumerResponse);
 	}
 }

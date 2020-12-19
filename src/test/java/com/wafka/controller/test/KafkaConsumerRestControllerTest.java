@@ -4,12 +4,17 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.wafka.application.WafkaApplication;
 import com.wafka.controller.KafkaConsumerRestController;
-import com.wafka.model.FetchDataResponse;
-import com.wafka.model.SubscriptionsResponse;
+import com.wafka.model.response.ConsumerResponse;
+import com.wafka.model.response.FetchDataConsumerResponse;
+import com.wafka.model.response.RegisteredConsumersResponse;
+import com.wafka.model.response.SubscriptionsConsumerResponse;
+import com.wafka.types.OperationStatus;
 import org.junit.FixMethodOrder;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.MethodSorters;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -23,7 +28,6 @@ import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.util.Assert;
 
 import java.io.UnsupportedEncodingException;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -37,7 +41,12 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @ContextConfiguration(classes = WafkaApplication.class)
 @SpringBootTest(
 		webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
-		classes = KafkaConsumerRestController.class
+		classes = KafkaConsumerRestController.class,
+		properties = {
+				"spring.main.banner-mode=off",
+				"logging.level.org.springframework=OFF",
+				"logging.level.root=OFF"
+		}
 )
 public class KafkaConsumerRestControllerTest {
 	@Autowired
@@ -46,41 +55,62 @@ public class KafkaConsumerRestControllerTest {
 	@Autowired
 	private ObjectMapper objectMapper;
 
+	//@Autowired
+	private static final Logger logger = LoggerFactory.getLogger(KafkaConsumerRestControllerTest.class);
+
 	private static final String basePath = "/kafka/consumer/rest/v1";
 	private static final String testConsumerId = "testConsumerId";
 
 	@Test
 	public void testA_ConsumerCreatedSuccessfully() throws Exception {
+		logger.info("Running testA_ConsumerCreatedSuccessfully");
+
 		Map<String, Object> consumerCreationResponse = mockCreateConsumerCreationOperation();
 		Assert.notEmpty(consumerCreationResponse, "Consumer creation map is empty!");
 	}
 
 	@Test
-	public void testB_ConsumerListNotEmpty() throws Exception {
-		Map<String ,Object> consumerListResponse = mockConsumerListOperation();
-		Assert.notEmpty((ArrayList<?>)consumerListResponse.get("consumers"),
-				"Consumers list mut not be empty!");
+	public void testB_RegisteredConsumersListNotEmpty() throws Exception {
+		logger.info("Running testB_RegisteredConsumersListNotEmpty");
+
+		RegisteredConsumersResponse consumerListResponse = mockRegisteredConsumerListOperation();
+		Assert.notEmpty(consumerListResponse.getConsumers(), "Consumers list mut not be empty!");
 	}
 
 	@Test
 	public void testC_ConsumerSubscribeToTopics() throws Exception {
-		SubscriptionsResponse subscriptionsResponse = mockConsumerTopicSubscribeOperation();
+		logger.info("Running testC_ConsumerSubscribeToTopics");
+
+		SubscriptionsConsumerResponse subscriptionsResponse = mockConsumerTopicSubscribeOperation();
 		Assert.notEmpty(subscriptionsResponse.getSubscriptions(), "Consumer subscription list is empty!");
 	}
 
 	@Test
 	public void testD_ConsumerSubscriptionListNotEmpty() throws Exception {
-		SubscriptionsResponse subscriptionListResponse = mockConsumerSubscriptionListOperation();
+		logger.info("Running testD_ConsumerSubscriptionListNotEmpty");
+
+		SubscriptionsConsumerResponse subscriptionListResponse = mockConsumerSubscriptionListOperation();
 		Assert.notEmpty(subscriptionListResponse.getSubscriptions(), "Consumer subscription list is empty!");
 	}
 
 	@Test
 	public void testE_ConsumerFetchEmptyData() throws Exception {
-		FetchDataResponse fetchDataResponse = mockConsumerFetchDataOperation();
+		logger.info("Running testE_ConsumerFetchEmptyData");
+
+		FetchDataConsumerResponse fetchDataResponse = mockConsumerFetchDataOperation();
 		Assert.isTrue(fetchDataResponse.getFetchedContents().isEmpty(), "Fetched data is not empty");
 	}
 
-	private Map<String, Object> mockConsumerListOperation() throws Exception {
+	@Test
+	public void testF_ConsumerUnsubscribeFromTopics() throws Exception {
+		logger.info("Running testF_ConsumerUnsubscribeFromTopics");
+
+		ConsumerResponse unsubscribeResponse = mockConsumerUnsubscribeOperation();
+		Assert.isTrue(unsubscribeResponse.getOperationStatus() == OperationStatus.SUCCESS,
+				"Unsubscribe operation failed!");
+	}
+
+	private RegisteredConsumersResponse mockRegisteredConsumerListOperation() throws Exception {
 		MockHttpServletRequestBuilder mockHttpServletRequestBuilder =
 				MockMvcRequestBuilders.get(basePath + "/list");
 
@@ -89,7 +119,7 @@ public class KafkaConsumerRestControllerTest {
 				.andExpect(status().isOk())
 				.andReturn();
 
-		return readMvcResultAsMap(mvcResult);
+		return readMvcResultAs(mvcResult, RegisteredConsumersResponse.class);
 	}
 
 	private Map<String, Object> mockCreateConsumerCreationOperation() throws Exception {
@@ -111,7 +141,7 @@ public class KafkaConsumerRestControllerTest {
 		return readMvcResultAsMap(mvcResult);
 	}
 
-	private SubscriptionsResponse mockConsumerTopicSubscribeOperation() throws Exception {
+	private SubscriptionsConsumerResponse mockConsumerTopicSubscribeOperation() throws Exception {
 		List<String> topics = Collections.singletonList("testing-topic");
 		String topicJsonString = objectMapper.writeValueAsString(topics);
 
@@ -125,10 +155,10 @@ public class KafkaConsumerRestControllerTest {
 				.andExpect(status().isOk())
 				.andReturn();
 
-		return readMvcResultAs(mvcResult, SubscriptionsResponse.class);
+		return readMvcResultAs(mvcResult, SubscriptionsConsumerResponse.class);
 	}
 
-	private FetchDataResponse mockConsumerFetchDataOperation() throws Exception {
+	private FetchDataConsumerResponse mockConsumerFetchDataOperation() throws Exception {
 		MockHttpServletRequestBuilder mockHttpServletRequestBuilder = MockMvcRequestBuilders
 				.get(basePath + "/{consumerId}/fetch", testConsumerId)
 				.param("pollDuration", String.valueOf(1));
@@ -138,10 +168,10 @@ public class KafkaConsumerRestControllerTest {
 				.andExpect(status().isOk())
 				.andReturn();
 
-		return readMvcResultAs(mvcResult, FetchDataResponse.class);
+		return readMvcResultAs(mvcResult, FetchDataConsumerResponse.class);
 	}
 
-	private SubscriptionsResponse mockConsumerSubscriptionListOperation() throws Exception {
+	private SubscriptionsConsumerResponse mockConsumerSubscriptionListOperation() throws Exception {
 		MockHttpServletRequestBuilder mockHttpServletRequestBuilder = MockMvcRequestBuilders
 				.get(basePath + "/{consumerId}/subscriptions", testConsumerId);
 
@@ -150,7 +180,19 @@ public class KafkaConsumerRestControllerTest {
 				.andExpect(status().isOk())
 				.andReturn();
 
-		return readMvcResultAs(mvcResult, SubscriptionsResponse.class);
+		return readMvcResultAs(mvcResult, SubscriptionsConsumerResponse.class);
+	}
+
+	private ConsumerResponse mockConsumerUnsubscribeOperation() throws Exception {
+		MockHttpServletRequestBuilder mockHttpServletRequestBuilder = MockMvcRequestBuilders
+				.get(basePath + "/{consumerId}/unsubscribe", testConsumerId);
+
+		MvcResult mvcResult = mockMvc.perform(mockHttpServletRequestBuilder)
+				.andExpect(content().contentType(MediaType.APPLICATION_JSON_VALUE))
+				.andExpect(status().isOk())
+				.andReturn();
+
+		return readMvcResultAs(mvcResult, ConsumerResponse.class);
 	}
 
 	@SuppressWarnings("unchecked cast")

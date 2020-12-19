@@ -5,7 +5,7 @@ import com.wafka.factory.IConsumerIdFactory;
 import com.wafka.factory.IResponseFactory;
 import com.wafka.model.CommandParameters;
 import com.wafka.model.ConsumerId;
-import com.wafka.model.IResponse;
+import com.wafka.model.response.IConsumerResponse;
 import com.wafka.qualifiers.ConsumerIdProtocol;
 import com.wafka.service.IAutoConsumerOperationService;
 import com.wafka.service.IWebSocketSenderService;
@@ -19,7 +19,7 @@ import org.springframework.stereotype.Component;
 import javax.websocket.Session;
 
 @Component
-public class StartConsumerWebSocketCommandImpl implements IWebSocketCommand {
+public class StartConsumerWebSocketCommand implements IWebSocketCommand {
 	@Autowired
 	private IAutoConsumerOperationService iAutoConsumerOperationService;
 
@@ -38,17 +38,10 @@ public class StartConsumerWebSocketCommandImpl implements IWebSocketCommand {
 		ConsumerId consumerId = iConsumerIdFactory.getConsumerId(session.getId());
 		OperationStatus operationStatus = iAutoConsumerOperationService.start(consumerId);
 
-		String message;
-		if (operationStatus == OperationStatus.SUCCESS) {
-			message = "Successfully started consumer loop for consumer: " + consumerId;
-		} else {
-			message = "Error while starting consumer loop for consumer: " + consumerId;
-		}
+		IConsumerResponse iConsumerResponse = iResponseFactory.getResponse(consumerId,
+				ResponseType.ERROR, operationStatus);
 
-		IResponse iResponse = iResponseFactory.getResponse(consumerId, ResponseType.ERROR,
-				message, operationStatus);
-
-		iWebSocketSenderService.send(session, iResponse);
+		iWebSocketSenderService.send(session, iConsumerResponse);
 	}
 
 	@Override

@@ -5,7 +5,7 @@ import com.wafka.factory.IConsumerIdFactory;
 import com.wafka.factory.IResponseFactory;
 import com.wafka.model.CommandParameters;
 import com.wafka.model.ConsumerId;
-import com.wafka.model.IResponse;
+import com.wafka.model.response.IConsumerResponse;
 import com.wafka.qualifiers.ConsumerIdProtocol;
 import com.wafka.service.IAutoConsumerOperationService;
 import com.wafka.service.IConsumerWebSocketSessionService;
@@ -20,7 +20,7 @@ import org.springframework.stereotype.Component;
 import javax.websocket.Session;
 
 @Component
-public class StopConsumerWebSocketCommandImpl implements IWebSocketCommand {
+public class StopConsumerWebSocketCommand implements IWebSocketCommand {
 	@Autowired
 	private IAutoConsumerOperationService iAutoConsumerOperationService;
 
@@ -47,17 +47,10 @@ public class StopConsumerWebSocketCommandImpl implements IWebSocketCommand {
 		// the send would fail.
 
 		if (session.isOpen()) {
-			String message;
-			if (operationStatus == OperationStatus.SUCCESS) {
-				message = "Successfully stopped consumer {}" + consumerId;
-			} else {
-				message = "Failed to stop consumer {}" + consumerId;
-			}
+			IConsumerResponse iConsumerResponse = iResponseFactory.getResponse(consumerId,
+					ResponseType.COMMUNICATION, operationStatus);
 
-			IResponse iResponse = iResponseFactory.getResponse(consumerId, ResponseType.COMMUNICATION,
-					message, operationStatus);
-
-			iWebSocketSenderService.send(session, iResponse);
+			iWebSocketSenderService.send(session, iConsumerResponse);
 		}
 
 		iConsumerWebSocketSessionService.delete(consumerId);

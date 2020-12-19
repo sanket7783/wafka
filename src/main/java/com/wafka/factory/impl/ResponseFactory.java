@@ -2,6 +2,7 @@ package com.wafka.factory.impl;
 
 import com.wafka.factory.IResponseFactory;
 import com.wafka.model.*;
+import com.wafka.model.response.*;
 import com.wafka.types.OperationStatus;
 import com.wafka.types.ResponseType;
 import org.springframework.stereotype.Service;
@@ -12,23 +13,21 @@ import java.util.Set;
 @Service
 public class ResponseFactory implements IResponseFactory {
 	@Override
-	public IResponse getResponse(ConsumerId consumerId, String message, List<FetchedContent> fetchedContents,
-								 OperationStatus operationStatus) {
+	public IConsumerResponse getResponse(ConsumerId consumerId, List<FetchedContent> fetchedContents,
+										 OperationStatus operationStatus) {
 
-		FetchDataResponse fetchDataResponseImpl = new FetchDataResponse(fetchedContents);
+		FetchDataConsumerResponse fetchDataResponseImpl = new FetchDataConsumerResponse(fetchedContents);
 		fetchDataResponseImpl.setResponseType(ResponseType.INCOMING_DATA);
-		fetchDataResponseImpl.setMessage(message);
 		fetchDataResponseImpl.setConsumerId(consumerId);
 		fetchDataResponseImpl.setOperationStatus(operationStatus);
 		return fetchDataResponseImpl;
 	}
 
 	@Override
-	public IResponse getResponse(ConsumerId consumerId, ResponseType responseType,
-								 String message,  OperationStatus operationStatus) {
+	public IConsumerResponse getResponse(ConsumerId consumerId, ResponseType responseType,
+										 OperationStatus operationStatus) {
 
-		DefaultResponse defaultResponse = new DefaultResponse();
-		defaultResponse.setMessage(message);
+		ConsumerResponse defaultResponse = new ConsumerResponse();
 		defaultResponse.setResponseType(responseType);
 		defaultResponse.setConsumerId(consumerId);
 		defaultResponse.setOperationStatus(operationStatus);
@@ -36,14 +35,21 @@ public class ResponseFactory implements IResponseFactory {
 	}
 
 	@Override
-	public IResponse getResponse(ConsumerId consumerId, String message, Set<String> subscriptions,
-								 OperationStatus operationStatus) {
+	public IConsumerResponse getResponse(ConsumerId consumerId, Set<String> subscriptions,
+										 OperationStatus operationStatus) {
 
-		SubscriptionsResponse subscriptionsResponse = new SubscriptionsResponse(subscriptions);
+		SubscriptionsConsumerResponse subscriptionsResponse = new SubscriptionsConsumerResponse(subscriptions);
 		subscriptionsResponse.setResponseType(ResponseType.COMMUNICATION);
-		subscriptionsResponse.setMessage(message);
 		subscriptionsResponse.setConsumerId(consumerId);
 		subscriptionsResponse.setOperationStatus(operationStatus);
 		return subscriptionsResponse;
+	}
+
+	@Override
+	public IResponse getResponse(Set<ConsumerId> consumerIds) {
+		RegisteredConsumersResponse registeredConsumersResponse = new RegisteredConsumersResponse();
+		registeredConsumersResponse.setConsumers(consumerIds);
+		registeredConsumersResponse.setResponseType(ResponseType.COMMUNICATION);
+		return registeredConsumersResponse;
 	}
 }

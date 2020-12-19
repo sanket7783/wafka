@@ -6,7 +6,7 @@ import com.wafka.factory.IConsumerIdFactory;
 import com.wafka.factory.IResponseFactory;
 import com.wafka.model.CommandParameters;
 import com.wafka.model.ConsumerId;
-import com.wafka.model.IResponse;
+import com.wafka.model.response.IConsumerResponse;
 import com.wafka.qualifiers.ConsumerIdProtocol;
 import com.wafka.service.IWebSocketSenderService;
 import com.wafka.types.CommandName;
@@ -20,7 +20,7 @@ import org.springframework.stereotype.Component;
 import javax.websocket.Session;
 
 @Component
-public class SocketCreatedWebSocketCommandImpl implements IWebSocketCommand {
+public class SocketCreatedWebSocketCommand implements IWebSocketCommand {
 	@Autowired
 	private Logger logger;
 
@@ -41,10 +41,10 @@ public class SocketCreatedWebSocketCommandImpl implements IWebSocketCommand {
 		logger.info("Established WebSocket connection. Session id {}. When requested, the consumer will have id {}",
 				session.getId(), consumerId);
 
-		IResponse iResponse = iResponseFactory.getResponse(consumerId, ResponseType.COMMUNICATION,
-				"Connected", OperationStatus.SUCCESS);
+		IConsumerResponse iConsumerResponse = iResponseFactory.getResponse(consumerId,
+				ResponseType.COMMUNICATION, OperationStatus.SUCCESS);
 
-		iWebSocketSenderService.send(session, iResponse);
+		iWebSocketSenderService.send(session, iConsumerResponse);
 	}
 
 	@Override

@@ -3,7 +3,7 @@ package com.wafka.thread.impl;
 import com.wafka.factory.IFetchedContentFactory;
 import com.wafka.factory.IResponseFactory;
 import com.wafka.model.ConsumerId;
-import com.wafka.model.IResponse;
+import com.wafka.model.response.IConsumerResponse;
 import com.wafka.service.IWebSocketSenderService;
 import com.wafka.thread.IConsumerThreadCallback;
 import com.wafka.types.OperationStatus;
@@ -14,8 +14,8 @@ import org.slf4j.LoggerFactory;
 
 import javax.websocket.Session;
 
-public class ConsumerThreadCallbackImpl implements IConsumerThreadCallback {
-	private static final Logger LOGGER = LoggerFactory.getLogger(ConsumerThreadCallbackImpl.class);
+public class ConsumerThreadCallback implements IConsumerThreadCallback {
+	private static final Logger LOGGER = LoggerFactory.getLogger(ConsumerThreadCallback.class);
 
 	private final Session session;
 
@@ -25,7 +25,7 @@ public class ConsumerThreadCallbackImpl implements IConsumerThreadCallback {
 
 	private final IWebSocketSenderService iWebSocketSender;
 
-	public ConsumerThreadCallbackImpl(
+	public ConsumerThreadCallback(
 			Session session,
 			IFetchedContentFactory iFetchedContentFactory,
 			IResponseFactory iResponseFactory,
@@ -39,11 +39,11 @@ public class ConsumerThreadCallbackImpl implements IConsumerThreadCallback {
 
 	@Override
 	public void onRecordsReceived(ConsumerId consumerId, ConsumerRecords<String, byte[]> consumerRecords) {
-		IResponse iResponse = iResponseFactory.getResponse(consumerId, "Successfully fetched data",
+		IConsumerResponse iConsumerResponse = iResponseFactory.getResponse(consumerId,
 				iFetchedContentFactory.getContents(consumerRecords), OperationStatus.SUCCESS
 		);
 
-		iWebSocketSender.send(session, iResponse);
+		iWebSocketSender.send(session, iConsumerResponse);
 	}
 
 	@Override
@@ -51,9 +51,9 @@ public class ConsumerThreadCallbackImpl implements IConsumerThreadCallback {
 		String exceptionMessage = throwable.getMessage();
 		LOGGER.error("An error occurred during consumer loop: {}.", exceptionMessage);
 
-		IResponse iResponse = iResponseFactory.getResponse(consumerId, ResponseType.ERROR, exceptionMessage,
+		IConsumerResponse iConsumerResponse = iResponseFactory.getResponse(consumerId, ResponseType.ERROR,
 				OperationStatus.FAIL);
 
-		iWebSocketSender.send(session, iResponse);
+		iWebSocketSender.send(session, iConsumerResponse);
 	}
 }

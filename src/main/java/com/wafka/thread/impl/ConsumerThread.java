@@ -19,8 +19,8 @@ import java.util.concurrent.Future;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-public class ConsumerThreadImpl extends AbstractConsumerThread {
-	private static final Logger LOGGER = LoggerFactory.getLogger(ConsumerThreadImpl.class);
+public class ConsumerThread extends AbstractConsumerThread {
+	private static final Logger LOGGER = LoggerFactory.getLogger(ConsumerThread.class);
 
 	private final AtomicBoolean shouldStopPolling;
 	private final AtomicBoolean shouldCommitOffset;
@@ -41,7 +41,7 @@ public class ConsumerThreadImpl extends AbstractConsumerThread {
 		Optional<T> perform();
 	}
 
-	public ConsumerThreadImpl(ConsumerThreadSettings consumerThreadSettings) {
+	public ConsumerThread(ConsumerThreadSettings consumerThreadSettings) {
 		this.consumerThreadSettings = consumerThreadSettings;
 		this.kafkaConsumer = consumerThreadSettings.getWrappedConsumer();
 

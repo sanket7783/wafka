@@ -18,7 +18,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Future;
 
 @Service
-public class ConsumerThreadServiceImpl implements IConsumerThreadService {
+public class ConsumerThreadService implements IConsumerThreadService {
 	private final Map<ConsumerId, AbstractConsumerThread> consumerThreadMap;
 
 	private final Logger logger;
@@ -26,7 +26,7 @@ public class ConsumerThreadServiceImpl implements IConsumerThreadService {
 	private final IConsumerThreadFactory iConsumerThreadFactory;
 
 	@Autowired
-	public ConsumerThreadServiceImpl(Logger logger, IConsumerThreadFactory iConsumerThreadFactory) {
+	public ConsumerThreadService(Logger logger, IConsumerThreadFactory iConsumerThreadFactory) {
 		this.logger = logger;
 		this.iConsumerThreadFactory = iConsumerThreadFactory;
 
