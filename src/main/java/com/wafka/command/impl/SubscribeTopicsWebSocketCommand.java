@@ -4,10 +4,9 @@ import com.wafka.command.IWebSocketCommand;
 import com.wafka.exception.InvalidTopicListArgumentException;
 import com.wafka.exception.MissingCommandArgumentException;
 import com.wafka.factory.IConsumerIdFactory;
-import com.wafka.factory.IResponseFactory;
 import com.wafka.model.CommandParameters;
 import com.wafka.model.ConsumerId;
-import com.wafka.model.response.IConsumerResponse;
+import com.wafka.model.response.SubscribeTopicOperationResponse;
 import com.wafka.qualifiers.ConsumerIdProtocol;
 import com.wafka.service.IAutoConsumerOperationService;
 import com.wafka.service.IWebSocketSenderService;
@@ -31,9 +30,6 @@ public class SubscribeTopicsWebSocketCommand implements IWebSocketCommand {
 	private IConsumerIdFactory iConsumerIdFactory;
 
 	@Autowired
-	private IResponseFactory iResponseFactory;
-
-	@Autowired
 	private IWebSocketSenderService iWebSocketSenderService;
 
 	@SuppressWarnings("unchecked")
@@ -54,10 +50,13 @@ public class SubscribeTopicsWebSocketCommand implements IWebSocketCommand {
 		ConsumerId consumerId = iConsumerIdFactory.getConsumerId(session.getId());
 		OperationStatus operationStatus = iAutoConsumerOperationService.subscribe(consumerId, topics);
 
-		IConsumerResponse iConsumerResponse = iResponseFactory.getResponse(consumerId,
-				ResponseType.COMMUNICATION, operationStatus);
+		SubscribeTopicOperationResponse subscriptionsConsumerResponse = new SubscribeTopicOperationResponse();
+		subscriptionsConsumerResponse.setConsumerId(consumerId);
+		subscriptionsConsumerResponse.setSubscriptions(topics);
+		subscriptionsConsumerResponse.setResponseType(ResponseType.COMMUNICATION);
+		subscriptionsConsumerResponse.setOperationStatus(operationStatus);
 
-		iWebSocketSenderService.send(session, iConsumerResponse);
+		iWebSocketSenderService.send(session, subscriptionsConsumerResponse);
 	}
 
 	@Override

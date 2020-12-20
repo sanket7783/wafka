@@ -3,7 +3,7 @@ package com.wafka.model.response;
 import com.wafka.model.ConsumerId;
 import com.wafka.types.OperationStatus;
 
-public class ConsumerResponse extends Response implements IConsumerResponse {
+public class OperationResponse extends Response implements IOperationResponse {
 	private static final long serialVersionUID = -8049545195779798512L;
 
 	private ConsumerId consumerId;

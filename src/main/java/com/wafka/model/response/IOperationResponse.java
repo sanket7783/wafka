@@ -3,9 +3,7 @@ package com.wafka.model.response;
 import com.wafka.model.ConsumerId;
 import com.wafka.types.OperationStatus;
 
-import java.io.Serializable;
-
-public interface IConsumerResponse extends Serializable {
+public interface IOperationResponse extends IResponse {
 	void setConsumerId(ConsumerId consumerId);
 
 	ConsumerId getConsumerId();

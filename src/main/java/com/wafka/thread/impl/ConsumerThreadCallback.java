@@ -1,9 +1,10 @@
 package com.wafka.thread.impl;
 
 import com.wafka.factory.IFetchedContentFactory;
-import com.wafka.factory.IResponseFactory;
 import com.wafka.model.ConsumerId;
-import com.wafka.model.response.IConsumerResponse;
+import com.wafka.model.FetchedContent;
+import com.wafka.model.response.OperationResponse;
+import com.wafka.model.response.FetchDataOperationResponse;
 import com.wafka.service.IWebSocketSenderService;
 import com.wafka.thread.IConsumerThreadCallback;
 import com.wafka.types.OperationStatus;
@@ -13,6 +14,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.websocket.Session;
+import java.util.List;
 
 public class ConsumerThreadCallback implements IConsumerThreadCallback {
 	private static final Logger LOGGER = LoggerFactory.getLogger(ConsumerThreadCallback.class);
@@ -21,29 +23,28 @@ public class ConsumerThreadCallback implements IConsumerThreadCallback {
 
 	private final IFetchedContentFactory iFetchedContentFactory;
 
-	private final IResponseFactory iResponseFactory;
-
-	private final IWebSocketSenderService iWebSocketSender;
+	private final IWebSocketSenderService iWebSocketSenderService;
 
 	public ConsumerThreadCallback(
 			Session session,
 			IFetchedContentFactory iFetchedContentFactory,
-			IResponseFactory iResponseFactory,
-			IWebSocketSenderService iWebSocketSender) {
+			IWebSocketSenderService iWebSocketSenderService) {
 
 		this.session = session;
 		this.iFetchedContentFactory = iFetchedContentFactory;
-		this.iWebSocketSender = iWebSocketSender;
-		this.iResponseFactory = iResponseFactory;
+		this.iWebSocketSenderService = iWebSocketSenderService;
 	}
 
 	@Override
 	public void onRecordsReceived(ConsumerId consumerId, ConsumerRecords<String, byte[]> consumerRecords) {
-		IConsumerResponse iConsumerResponse = iResponseFactory.getResponse(consumerId,
-				iFetchedContentFactory.getContents(consumerRecords), OperationStatus.SUCCESS
-		);
+		List<FetchedContent> fetchedContentList = iFetchedContentFactory.getContents(consumerRecords);
 
-		iWebSocketSender.send(session, iConsumerResponse);
+		FetchDataOperationResponse fetchDataConsumerResponse = new FetchDataOperationResponse(fetchedContentList);
+		fetchDataConsumerResponse.setResponseType(ResponseType.INCOMING_DATA);
+		fetchDataConsumerResponse.setConsumerId(consumerId);
+		fetchDataConsumerResponse.setOperationStatus(OperationStatus.SUCCESS);
+
+		iWebSocketSenderService.send(session, fetchDataConsumerResponse);
 	}
 
 	@Override
@@ -51,9 +52,11 @@ public class ConsumerThreadCallback implements IConsumerThreadCallback {
 		String exceptionMessage = throwable.getMessage();
 		LOGGER.error("An error occurred during consumer loop: {}.", exceptionMessage);
 
-		IConsumerResponse iConsumerResponse = iResponseFactory.getResponse(consumerId, ResponseType.ERROR,
-				OperationStatus.FAIL);
+		OperationResponse consumerOperationResponse = new OperationResponse();
+		consumerOperationResponse.setConsumerId(consumerId);
+		consumerOperationResponse.setResponseType(ResponseType.ERROR);
+		consumerOperationResponse.setOperationStatus(OperationStatus.FAIL);
 
-		iWebSocketSender.send(session, iConsumerResponse);
+		iWebSocketSenderService.send(session, consumerOperationResponse);
 	}
 }

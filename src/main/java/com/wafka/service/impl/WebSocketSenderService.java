@@ -1,7 +1,7 @@
 package com.wafka.service.impl;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.wafka.model.response.IConsumerResponse;
+import com.wafka.model.response.IResponse;
 import com.wafka.service.IWebSocketSenderService;
 import org.slf4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,12 +24,9 @@ public class WebSocketSenderService implements IWebSocketSenderService {
 	}
 
 	@Override
-	public void send(Session session, IConsumerResponse iConsumerResponse) {
+	public void send(Session session, IResponse iResponse) {
 		try {
-			session.getBasicRemote().sendBinary(
-					ByteBuffer.wrap(objectMapper.writeValueAsBytes(iConsumerResponse))
-			);
-
+			session.getBasicRemote().sendBinary(ByteBuffer.wrap(objectMapper.writeValueAsBytes(iResponse)));
 		} catch (IOException exception) {
 			logger.error("Cannot send content to consumer {}: {}", session.getId(), exception.getMessage());
 		}

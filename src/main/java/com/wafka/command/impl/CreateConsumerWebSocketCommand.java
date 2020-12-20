@@ -4,11 +4,10 @@ import com.wafka.command.IWebSocketCommand;
 import com.wafka.factory.IConsumerIdFactory;
 import com.wafka.factory.IConsumerPropertyFactory;
 import com.wafka.factory.IFetchedContentFactory;
-import com.wafka.factory.IResponseFactory;
 import com.wafka.model.CommandParameters;
-import com.wafka.model.ConsumerThreadSettings;
 import com.wafka.model.ConsumerId;
-import com.wafka.model.response.IConsumerResponse;
+import com.wafka.model.ConsumerThreadSettings;
+import com.wafka.model.response.CreatedConsumerOperationResponse;
 import com.wafka.qualifiers.ConsumerIdProtocol;
 import com.wafka.service.IConsumerService;
 import com.wafka.service.IConsumerThreadService;
@@ -18,6 +17,7 @@ import com.wafka.thread.IConsumerThreadCallback;
 import com.wafka.thread.impl.ConsumerThreadCallback;
 import com.wafka.types.*;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
+import org.slf4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -28,6 +28,9 @@ import java.util.Properties;
 
 @Component
 public class CreateConsumerWebSocketCommand implements IWebSocketCommand {
+	@Autowired
+	private Logger logger;
+
 	@Autowired
 	private IConsumerService iConsumerService;
 
@@ -48,26 +51,23 @@ public class CreateConsumerWebSocketCommand implements IWebSocketCommand {
 	private IWebSocketSenderService iWebSocketSenderService;
 
 	@Autowired
-	private IResponseFactory iResponseFactory;
-
-	@Autowired
 	private IConsumerWebSocketSessionService iConsumerWebSocketSessionService;
 
 	@Override
 	public void execute(CommandParameters commandParameters, Session session) {
-		Map<ConsumerParameter, Object> parametersMap = commandParameters.getArguments();
+		Map<ConsumerParameter, Object> consumerParameterMap = commandParameters.getArguments();
 
 		ConsumerId consumerId = iConsumerIdFactory.getConsumerId(session.getId());
 
 		// Create physical consumer.
-		Properties consumerProperties = iConsumerPropertyFactory.getProperties(parametersMap);
+		Properties consumerProperties = iConsumerPropertyFactory.getProperties(consumerParameterMap);
 		iConsumerService.create(consumerId, consumerProperties);
 
 		// Create consumer thread (only creation, the thread will not be started)
 		KafkaConsumer<String, byte[]> kafkaConsumer = iConsumerService.getConsumerOrThrow(consumerId);
 
 		IConsumerThreadCallback iWebSocketConsumerCallback = new ConsumerThreadCallback(
-				session, iFetchedContentFactory, iResponseFactory, iWebSocketSenderService
+				session, iFetchedContentFactory, iWebSocketSenderService
 		);
 
 		ConsumerThreadSettings consumerThreadSettings = new ConsumerThreadSettings();
@@ -75,19 +75,24 @@ public class CreateConsumerWebSocketCommand implements IWebSocketCommand {
 		consumerThreadSettings.setiConsumerIdentifier(consumerId);
 		consumerThreadSettings.setWrappedConsumer(kafkaConsumer);
 
-		Object pollDuration = parametersMap.get(ConsumerParameter.POLL_DURATION);
+		Object pollDuration = consumerParameterMap.get(ConsumerParameter.POLL_DURATION);
 		if (pollDuration != null) {
 			int pollDurationSeconds = (int)Double.parseDouble(pollDuration.toString());
+			consumerParameterMap.put(ConsumerParameter.POLL_DURATION, pollDurationSeconds);
 			consumerThreadSettings.setPollLoopDuration(Duration.ofSeconds(pollDurationSeconds));
 		}
 
 		iConsumerThreadService.create(consumerThreadSettings);
 		iConsumerWebSocketSessionService.store(consumerId, session);
 
-		IConsumerResponse iConsumerResponse = iResponseFactory.getResponse(consumerId,
-				ResponseType.COMMUNICATION, OperationStatus.SUCCESS);
+		CreatedConsumerOperationResponse createdConsumerOperationResponse = new CreatedConsumerOperationResponse();
+		createdConsumerOperationResponse.setConsumerParameters(consumerParameterMap);
+		createdConsumerOperationResponse.setConsumerId(consumerId);
+		createdConsumerOperationResponse.setOperationStatus(OperationStatus.SUCCESS);
+		createdConsumerOperationResponse.setResponseType(ResponseType.COMMUNICATION);
 
-		iWebSocketSenderService.send(session, iConsumerResponse);
+		logger.info("Created consumer with settings {}", consumerParameterMap);
+		iWebSocketSenderService.send(session, createdConsumerOperationResponse);
 	}
 
 	@Override

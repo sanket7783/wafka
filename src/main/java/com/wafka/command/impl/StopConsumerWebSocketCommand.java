@@ -2,10 +2,9 @@ package com.wafka.command.impl;
 
 import com.wafka.command.IWebSocketCommand;
 import com.wafka.factory.IConsumerIdFactory;
-import com.wafka.factory.IResponseFactory;
 import com.wafka.model.CommandParameters;
 import com.wafka.model.ConsumerId;
-import com.wafka.model.response.IConsumerResponse;
+import com.wafka.model.response.OperationResponse;
 import com.wafka.qualifiers.ConsumerIdProtocol;
 import com.wafka.service.IAutoConsumerOperationService;
 import com.wafka.service.IConsumerWebSocketSessionService;
@@ -29,9 +28,6 @@ public class StopConsumerWebSocketCommand implements IWebSocketCommand {
 	private IConsumerIdFactory iConsumerIdFactory;
 
 	@Autowired
-	private IResponseFactory iResponseFactory;
-
-	@Autowired
 	private IWebSocketSenderService iWebSocketSenderService;
 
 	@Autowired
@@ -47,10 +43,12 @@ public class StopConsumerWebSocketCommand implements IWebSocketCommand {
 		// the send would fail.
 
 		if (session.isOpen()) {
-			IConsumerResponse iConsumerResponse = iResponseFactory.getResponse(consumerId,
-					ResponseType.COMMUNICATION, operationStatus);
+			OperationResponse consumerOperationResponse = new OperationResponse();
+			consumerOperationResponse.setConsumerId(consumerId);
+			consumerOperationResponse.setResponseType(ResponseType.COMMUNICATION);
+			consumerOperationResponse.setOperationStatus(operationStatus);
 
-			iWebSocketSenderService.send(session, iConsumerResponse);
+			iWebSocketSenderService.send(session, consumerOperationResponse);
 		}
 
 		iConsumerWebSocketSessionService.delete(consumerId);

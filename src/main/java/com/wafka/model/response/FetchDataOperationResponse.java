@@ -6,16 +6,16 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-public class FetchDataConsumerResponse extends ConsumerResponse {
+public class FetchDataOperationResponse extends OperationResponse {
 	private static final long serialVersionUID = -6103467784487403800L;
 
 	private final List<FetchedContent> fetchedContents;
 
-	public FetchDataConsumerResponse() {
+	public FetchDataOperationResponse() {
 		this.fetchedContents = new ArrayList<>();
 	}
 
-	public FetchDataConsumerResponse(List<FetchedContent> fetchedContents) {
+	public FetchDataOperationResponse(List<FetchedContent> fetchedContents) {
 		this.fetchedContents = fetchedContents;
 	}
 

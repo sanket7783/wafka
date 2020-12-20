@@ -4,16 +4,16 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 
-public class SubscriptionsConsumerResponse extends ConsumerResponse {
+public class SubscribeTopicOperationResponse extends OperationResponse {
 	private static final long serialVersionUID = 5127500883730591282L;
 
 	private Set<String> subscriptions;
 
-	public SubscriptionsConsumerResponse() {
+	public SubscribeTopicOperationResponse() {
 		subscriptions = new HashSet<>();
 	}
 
-	public SubscriptionsConsumerResponse(Set<String> subscriptions) {
+	public SubscribeTopicOperationResponse(Set<String> subscriptions) {
 		this.subscriptions = subscriptions;
 	}
 

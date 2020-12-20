@@ -3,10 +3,9 @@ package com.wafka.command.impl;
 import com.wafka.command.IWebSocketCommand;
 import com.wafka.exception.MissingCommandArgumentException;
 import com.wafka.factory.IConsumerIdFactory;
-import com.wafka.factory.IResponseFactory;
 import com.wafka.model.CommandParameters;
 import com.wafka.model.ConsumerId;
-import com.wafka.model.response.IConsumerResponse;
+import com.wafka.model.response.OperationResponse;
 import com.wafka.qualifiers.ConsumerIdProtocol;
 import com.wafka.service.IWebSocketSenderService;
 import com.wafka.types.CommandName;
@@ -28,9 +27,6 @@ public class SocketCreatedWebSocketCommand implements IWebSocketCommand {
 	private IWebSocketSenderService iWebSocketSenderService;
 
 	@Autowired
-	private IResponseFactory iResponseFactory;
-
-	@Autowired
 	@ConsumerIdProtocol(Protocol.WEBSOCKET)
 	private IConsumerIdFactory iConsumerIdFactory;
 
@@ -41,10 +37,12 @@ public class SocketCreatedWebSocketCommand implements IWebSocketCommand {
 		logger.info("Established WebSocket connection. Session id {}. When requested, the consumer will have id {}",
 				session.getId(), consumerId);
 
-		IConsumerResponse iConsumerResponse = iResponseFactory.getResponse(consumerId,
-				ResponseType.COMMUNICATION, OperationStatus.SUCCESS);
+		OperationResponse consumerOperationResponse = new OperationResponse();
+		consumerOperationResponse.setConsumerId(consumerId);
+		consumerOperationResponse.setResponseType(ResponseType.COMMUNICATION);
+		consumerOperationResponse.setOperationStatus(OperationStatus.SUCCESS);
 
-		iWebSocketSenderService.send(session, iConsumerResponse);
+		iWebSocketSenderService.send(session, consumerOperationResponse);
 	}
 
 	@Override

@@ -29,12 +29,12 @@ public class KafkaConsumerWebSocketController {
 	@OnOpen
 	public void onOpenConnection(Session session) {
 		this.session = session;
-		executeCommand(new CommandParameters(CommandName.SOCKET_CREATED));
+		iWebSocketCommandExecutorService.execute(new CommandParameters(CommandName.SOCKET_CREATED), session);
 	}
 
 	@OnMessage
 	public void onMessage(CommandParameters commandParameters) {
-		executeCommand(commandParameters);
+		iWebSocketCommandExecutorService.execute(commandParameters, session);
 	}
 
 	@OnClose
@@ -45,20 +45,12 @@ public class KafkaConsumerWebSocketController {
 		} else {
 			logger.info("Closing WebSocket session {} due to reason: {}", session.getId(), reason);
 		}
-		executeCommand(new CommandParameters(CommandName.STOP_CONSUMER));
+		iWebSocketCommandExecutorService.execute(new CommandParameters(CommandName.STOP_CONSUMER), session);
 	}
 
 	@OnError
 	public void onError(Throwable throwable) {
 		logger.error("An error occurred: {}", throwable.getMessage());
-		executeCommand(new CommandParameters(CommandName.STOP_CONSUMER));
-	}
-
-	private void executeCommand(CommandParameters commandParameters) {
-		try {
-			iWebSocketCommandExecutorService.execute(commandParameters, session);
-		} catch (Exception exception) {
-			iWebSocketCommandExecutorService.onExecutionError(exception, session);
-		}
+		iWebSocketCommandExecutorService.execute(new CommandParameters(CommandName.STOP_CONSUMER), session);
 	}
 }

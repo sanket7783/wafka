@@ -4,10 +4,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.wafka.application.WafkaApplication;
 import com.wafka.controller.KafkaConsumerRestController;
-import com.wafka.model.response.ConsumerResponse;
-import com.wafka.model.response.FetchDataConsumerResponse;
-import com.wafka.model.response.RegisteredConsumersResponse;
-import com.wafka.model.response.SubscriptionsConsumerResponse;
+import com.wafka.model.response.*;
 import com.wafka.types.OperationStatus;
 import org.junit.FixMethodOrder;
 import org.junit.Test;
@@ -58,8 +55,12 @@ public class KafkaConsumerRestControllerTest {
 	public void testA_ConsumerCreatedSuccessfully() throws Exception {
 		logger.info("Running testA_ConsumerCreatedSuccessfully");
 
-		Map<String, Object> consumerCreationResponse = mockCreateConsumerCreationOperation();
-		Assert.notEmpty(consumerCreationResponse, "Consumer creation map is empty!");
+		CreatedConsumerOperationResponse createdConsumerOperationResponse = mockCreateConsumerCreationOperation();
+		Assert.isTrue(createdConsumerOperationResponse.getOperationStatus() == OperationStatus.SUCCESS,
+
+				"Consumer creation map is empty!");
+		Assert.notEmpty(createdConsumerOperationResponse.getConsumerParameters(),
+				"Consumer parameters map is empty!");
 	}
 
 	@Test
@@ -74,7 +75,7 @@ public class KafkaConsumerRestControllerTest {
 	public void testC_ConsumerSubscribeToTopics() throws Exception {
 		logger.info("Running testC_ConsumerSubscribeToTopics");
 
-		SubscriptionsConsumerResponse subscriptionsResponse = mockConsumerTopicSubscribeOperation();
+		SubscribeTopicOperationResponse subscriptionsResponse = mockConsumerTopicSubscribeOperation();
 		Assert.notEmpty(subscriptionsResponse.getSubscriptions(), "Consumer subscription list is empty!");
 
 		Assert.isTrue(subscriptionsResponse.getOperationStatus() == OperationStatus.SUCCESS,
@@ -85,7 +86,7 @@ public class KafkaConsumerRestControllerTest {
 	public void testD_ConsumerSubscriptionListNotEmpty() throws Exception {
 		logger.info("Running testD_ConsumerSubscriptionListNotEmpty");
 
-		SubscriptionsConsumerResponse subscriptionListResponse = mockConsumerSubscriptionListOperation();
+		SubscribeTopicOperationResponse subscriptionListResponse = mockConsumerSubscriptionListOperation();
 		Assert.notEmpty(subscriptionListResponse.getSubscriptions(), "Consumer subscription list is empty!");
 
 		Assert.isTrue(subscriptionListResponse.getOperationStatus() == OperationStatus.SUCCESS,
@@ -96,7 +97,7 @@ public class KafkaConsumerRestControllerTest {
 	public void testE_ConsumerFetchEmptyData() throws Exception {
 		logger.info("Running testE_ConsumerFetchEmptyData");
 
-		FetchDataConsumerResponse fetchDataResponse = mockConsumerFetchDataOperation();
+		FetchDataOperationResponse fetchDataResponse = mockConsumerFetchDataOperation();
 		Assert.isTrue(fetchDataResponse.getFetchedContents().isEmpty(), "Fetched data is not empty");
 
 		Assert.isTrue(fetchDataResponse.getOperationStatus() == OperationStatus.SUCCESS,
@@ -107,16 +108,25 @@ public class KafkaConsumerRestControllerTest {
 	public void testF_ConsumerUnsubscribeFromTopics() throws Exception {
 		logger.info("Running testF_ConsumerUnsubscribeFromTopics");
 
-		ConsumerResponse unsubscribeResponse = mockConsumerUnsubscribeOperation();
+		OperationResponse unsubscribeResponse = mockConsumerUnsubscribeOperation();
 		Assert.isTrue(unsubscribeResponse.getOperationStatus() == OperationStatus.SUCCESS,
 				"Unsubscribe operation failed!");
 	}
 
 	@Test
-	public void testG_ConsumerStop() throws Exception {
-		logger.info("Running testG_ConsumerStop");
+	public void testG_ConsumerCommitSync() throws Exception {
+		logger.info("Running testG_ConsumerCommitSync");
 
-		ConsumerResponse stopResponse = mockConsumerStopOperation();
+		OperationResponse commitSyncResponse = mockConsumerCommitSyncOperation();
+		Assert.isTrue(commitSyncResponse.getOperationStatus() == OperationStatus.SUCCESS,
+				"Commit sync operation failed!");
+	}
+
+	@Test
+	public void testH_ConsumerStop() throws Exception {
+		logger.info("Running testH_ConsumerStop");
+
+		OperationResponse stopResponse = mockConsumerStopOperation();
 		Assert.isTrue(stopResponse.getOperationStatus() == OperationStatus.SUCCESS,
 				"Stop operation failed!");
 	}
@@ -133,7 +143,7 @@ public class KafkaConsumerRestControllerTest {
 		return readMvcResultAs(mvcResult, RegisteredConsumersResponse.class);
 	}
 
-	private Map<String, Object> mockCreateConsumerCreationOperation() throws Exception {
+	private CreatedConsumerOperationResponse mockCreateConsumerCreationOperation() throws Exception {
 		String testConsumerGroupId = "testConsumerGroupId";
 		String enableAutoCommit = "true";
 		String kafkaClusterId = "localhost:9092";
@@ -149,10 +159,10 @@ public class KafkaConsumerRestControllerTest {
 				.andExpect(status().isCreated())
 				.andReturn();
 
-		return readMvcResultAsMap(mvcResult);
+		return readMvcResultAs(mvcResult, CreatedConsumerOperationResponse.class);
 	}
 
-	private SubscriptionsConsumerResponse mockConsumerTopicSubscribeOperation() throws Exception {
+	private SubscribeTopicOperationResponse mockConsumerTopicSubscribeOperation() throws Exception {
 		List<String> topics = Collections.singletonList("testing-topic");
 		String topicJsonString = objectMapper.writeValueAsString(topics);
 
@@ -166,10 +176,10 @@ public class KafkaConsumerRestControllerTest {
 				.andExpect(status().isOk())
 				.andReturn();
 
-		return readMvcResultAs(mvcResult, SubscriptionsConsumerResponse.class);
+		return readMvcResultAs(mvcResult, SubscribeTopicOperationResponse.class);
 	}
 
-	private FetchDataConsumerResponse mockConsumerFetchDataOperation() throws Exception {
+	private FetchDataOperationResponse mockConsumerFetchDataOperation() throws Exception {
 		MockHttpServletRequestBuilder mockHttpServletRequestBuilder = MockMvcRequestBuilders
 				.get(basePath + "/{consumerId}/fetch", testConsumerId)
 				.param("pollDuration", String.valueOf(1));
@@ -179,10 +189,10 @@ public class KafkaConsumerRestControllerTest {
 				.andExpect(status().isOk())
 				.andReturn();
 
-		return readMvcResultAs(mvcResult, FetchDataConsumerResponse.class);
+		return readMvcResultAs(mvcResult, FetchDataOperationResponse.class);
 	}
 
-	private SubscriptionsConsumerResponse mockConsumerSubscriptionListOperation() throws Exception {
+	private SubscribeTopicOperationResponse mockConsumerSubscriptionListOperation() throws Exception {
 		MockHttpServletRequestBuilder mockHttpServletRequestBuilder = MockMvcRequestBuilders
 				.get(basePath + "/{consumerId}/subscriptions", testConsumerId);
 
@@ -191,10 +201,10 @@ public class KafkaConsumerRestControllerTest {
 				.andExpect(status().isOk())
 				.andReturn();
 
-		return readMvcResultAs(mvcResult, SubscriptionsConsumerResponse.class);
+		return readMvcResultAs(mvcResult, SubscribeTopicOperationResponse.class);
 	}
 
-	private ConsumerResponse mockConsumerUnsubscribeOperation() throws Exception {
+	private OperationResponse mockConsumerUnsubscribeOperation() throws Exception {
 		MockHttpServletRequestBuilder mockHttpServletRequestBuilder = MockMvcRequestBuilders
 				.get(basePath + "/{consumerId}/unsubscribe", testConsumerId);
 
@@ -203,10 +213,10 @@ public class KafkaConsumerRestControllerTest {
 				.andExpect(status().isOk())
 				.andReturn();
 
-		return readMvcResultAs(mvcResult, ConsumerResponse.class);
+		return readMvcResultAs(mvcResult, OperationResponse.class);
 	}
 
-	private ConsumerResponse mockConsumerStopOperation() throws Exception {
+	private OperationResponse mockConsumerStopOperation() throws Exception {
 		MockHttpServletRequestBuilder mockHttpServletRequestBuilder = MockMvcRequestBuilders
 				.get(basePath + "/{consumerId}/stop", testConsumerId);
 
@@ -215,7 +225,19 @@ public class KafkaConsumerRestControllerTest {
 				.andExpect(status().isOk())
 				.andReturn();
 
-		return readMvcResultAs(mvcResult, ConsumerResponse.class);
+		return readMvcResultAs(mvcResult, OperationResponse.class);
+	}
+
+	private OperationResponse mockConsumerCommitSyncOperation() throws Exception {
+		MockHttpServletRequestBuilder mockHttpServletRequestBuilder = MockMvcRequestBuilders
+				.get(basePath + "/{consumerId}/commitSync", testConsumerId);
+
+		MvcResult mvcResult = mockMvc.perform(mockHttpServletRequestBuilder)
+				.andExpect(content().contentType(MediaType.APPLICATION_JSON_VALUE))
+				.andExpect(status().isOk())
+				.andReturn();
+
+		return readMvcResultAs(mvcResult, OperationResponse.class);
 	}
 
 	@SuppressWarnings("unchecked cast")
