@@ -103,9 +103,10 @@ function createConsumer() {
     const command = {
         commandName: "create-consumer",
         arguments: {
-            kafkaClusterUri: "localhost:9092", // Specify here your Kafka cluster URI
-            groupId: "my-group-id",            // Specify here your group ID
-            enableAutoCommit: true             // You can choose to enable auto commit or no.
+            kafkaClusterUri: "localhost:9092", // Your Kafka cluster URI.
+            groupId: "my-group-id",            // Consumer group ID
+            enableAutoCommit: true,            // You can choose to enable auto commit or no.
+            pollDuration: 2                    // The duration of the poll loop (in seconds)
         }
    };
    sendMessage(command);
@@ -136,10 +137,7 @@ be associated with this very websocket and will stream data over it.
 ```javascript
 function startConsumer() {
     const command = {
-        commandName: "start-consumer",
-        arguments: {
-            pollDuration: 1
-        }
+        commandName: "start-consumer"
     };
     sendMessage(command);
 }
@@ -164,10 +162,18 @@ For example:
 curl -X POST "http://localhost:8787/kafka/consumer/rest/v1/my-consumer-id/my-group-id/create?enableAutoCommit=true&kafkaClusterId=localhost:9092"
 
 {
-    "consumerId": "my-consumer-id",
-    "kafkaClusterUri": "localhost:9092",
-    "groupId": "my-group-id",
-    "enableAutoCommit": true
+    "responseType": "COMMUNICATION",
+    "operationStatus": "SUCCESS",
+    "consumerId": {
+        "identifier": "my-consumer-id",
+        "protocol": "REST"
+    },
+    "consumerParameters": {
+        "ENABLE_AUTO_COMMIT": true,
+        "KAFKA_CLUSTER_URI": "localhost:9092",
+        "CONSUMER_ID": "my-consumer-id",
+        "GROUP_ID": "my-group-id"
+    }
 }
 ```
 
@@ -184,11 +190,17 @@ For example:
 curl -X POST -H "Content-Type: application/json" --data '["testing-topic"]' http://localhost:8787/kafka/consumer/rest/v1/my-consumer-id/subscribe
 
 {
+    "responseType": "COMMUNICATION",
+    "operationStatus": "SUCCESS",
     "subscriptions": [
         "testing-topic"
     ],
-    "consumerId": "my-consumer-id"
+    "consumerId": {
+        "identifier": "my-consumer-id",
+        "protocol": "REST"
+    }
 }
+
 ```
 
 Now, if you use a Kafka producer to sent some data to that topic, you can issue a fetch call in order to get some data.
@@ -201,12 +213,12 @@ http://localhost:8787/kafka/consumer/rest/v1/<consumer-id>/fetch"
 For example:
 
 ```bash
-curl -X GET "http://localhost:8787/kafka/consumer/rest/v1/my-consumer-id/fetch?pollDuration=1"
+curl -X GET "http://localhost:8787/kafka/consumer/rest/v1/my-consumer-id/fetch?pollDuration=2"
 
 {
-    "data": {
-        "responseType": "INCOMING_DATA",
-        "fetchedContents": [
+    "responseType": "INCOMING_DATA",
+    "operationStatus": "SUCCESS",
+    "fetchedContents": [
             {
                 "key": null,
                 "content": [
@@ -227,15 +239,16 @@ curl -X GET "http://localhost:8787/kafka/consumer/rest/v1/my-consumer-id/fetch?p
                 "partition": 0,
                 "offset": 4446
             }
-        ]
-    },
-    "consumerId": "my-consumer-id",
-    "message": "Successfully fetched data from topics."
+        ],
+    "consumerId": {
+        "identifier": "my-consumer-id",
+        "protocol": "REST"
+    }
 }
 ```
 
 In this case, I used the Kafka console producer in order to send a message on the subscribed topic. The binary message
-is visible under the JSON key "fetched_content".
+is visible under the JSON key "fetchedContents".
 
 ### TODO
 
