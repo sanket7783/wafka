@@ -45,7 +45,7 @@ public class WebSocketCommandExecutorService implements IWebSocketCommandExecuto
 
 		} catch (Exception exception) {
 			ConsumerId consumerId = iConsumerIdFactory.getConsumerId(session.getId());
-			logger.error("Exception for consumer {}: {}", consumerId, exception.getMessage());
+			logger.error("Exception for consumer {}: {}", consumerId, exception.getMessage(), exception);
 
 			OperationResponse operationResponse = new OperationResponse();
 			operationResponse.setConsumerId(consumerId);

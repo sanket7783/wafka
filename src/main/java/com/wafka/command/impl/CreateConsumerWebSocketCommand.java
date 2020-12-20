@@ -81,7 +81,7 @@ public class CreateConsumerWebSocketCommand implements IWebSocketCommand {
 			throw new MissingConsumerSettingException(ConsumerParameter.KAFKA_CLUSTER_URI);
 		}
 
-		int pollDurationSeconds = Integer.parseInt(pollDuration.toString());
+		int pollDurationSeconds = (int)Double.parseDouble(pollDuration.toString());
 		consumerParameterMap.put(ConsumerParameter.POLL_DURATION, pollDurationSeconds);
 		consumerThreadSettings.setPollLoopDuration(Duration.ofSeconds(pollDurationSeconds));
 

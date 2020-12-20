@@ -7,6 +7,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.InjectionPoint;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
 import org.springframework.scheduling.TaskScheduler;
 import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
@@ -20,7 +21,12 @@ public class BeanConfigurer {
 	}
 
 	@Bean
-	public ObjectMapper objectMapper() {
+	public MappingJackson2HttpMessageConverter messageConverter() {
+		return new MappingJackson2HttpMessageConverter(fasterObjectMapper());
+	}
+
+	@Bean
+	public ObjectMapper fasterObjectMapper() {
 		ObjectMapper objectMapper = new ObjectMapper();
 		objectMapper.registerModule(new AfterburnerModule());
 		return objectMapper;
