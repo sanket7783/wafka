@@ -1,6 +1,7 @@
 package com.wafka.command.impl;
 
 import com.wafka.command.IWebSocketCommand;
+import com.wafka.exception.MissingConsumerSettingException;
 import com.wafka.factory.IConsumerIdFactory;
 import com.wafka.factory.IConsumerPropertyFactory;
 import com.wafka.factory.IFetchedContentFactory;
@@ -76,11 +77,13 @@ public class CreateConsumerWebSocketCommand implements IWebSocketCommand {
 		consumerThreadSettings.setWrappedConsumer(kafkaConsumer);
 
 		Object pollDuration = consumerParameterMap.get(ConsumerParameter.POLL_DURATION);
-		if (pollDuration != null) {
-			int pollDurationSeconds = (int)Double.parseDouble(pollDuration.toString());
-			consumerParameterMap.put(ConsumerParameter.POLL_DURATION, pollDurationSeconds);
-			consumerThreadSettings.setPollLoopDuration(Duration.ofSeconds(pollDurationSeconds));
+		if (pollDuration == null) {
+			throw new MissingConsumerSettingException(ConsumerParameter.KAFKA_CLUSTER_URI);
 		}
+		int pollDurationSeconds = (int)Double.parseDouble(pollDuration.toString());
+		consumerParameterMap.put(ConsumerParameter.POLL_DURATION, pollDurationSeconds);
+		consumerThreadSettings.setPollLoopDuration(Duration.ofSeconds(pollDurationSeconds));
+
 
 		iConsumerThreadService.create(consumerThreadSettings);
 		iConsumerWebSocketSessionService.store(consumerId, session);

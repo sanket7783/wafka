@@ -6,6 +6,9 @@ import com.wafka.application.WafkaApplication;
 import com.wafka.controller.KafkaConsumerRestController;
 import com.wafka.model.response.*;
 import com.wafka.types.OperationStatus;
+import com.wafka.types.ResponseType;
+import org.json.JSONException;
+import org.json.JSONObject;
 import org.junit.FixMethodOrder;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -27,7 +30,6 @@ import org.springframework.util.Assert;
 import java.io.UnsupportedEncodingException;
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -54,81 +56,109 @@ public class KafkaConsumerRestControllerTest {
 	@Test
 	public void testA_ConsumerCreatedSuccessfully() throws Exception {
 		logger.info("Running testA_ConsumerCreatedSuccessfully");
-
 		CreatedConsumerOperationResponse createdConsumerOperationResponse = mockCreateConsumerCreationOperation();
-		Assert.isTrue(createdConsumerOperationResponse.getOperationStatus() == OperationStatus.SUCCESS,
 
+		Assert.isTrue(createdConsumerOperationResponse.getOperationStatus() == OperationStatus.SUCCESS,
 				"Consumer creation map is empty!");
+
 		Assert.notEmpty(createdConsumerOperationResponse.getConsumerParameters(),
 				"Consumer parameters map is empty!");
+
+		Assert.isTrue(createdConsumerOperationResponse.getResponseType() == ResponseType.COMMUNICATION,
+				"Response type is not of type communication!");
 	}
 
 	@Test
 	public void testB_RegisteredConsumersListNotEmpty() throws Exception {
 		logger.info("Running testB_RegisteredConsumersListNotEmpty");
+		RegisteredConsumersResponse registeredConsumersResponse = mockRegisteredConsumerListOperation();
 
-		RegisteredConsumersResponse consumerListResponse = mockRegisteredConsumerListOperation();
-		Assert.notEmpty(consumerListResponse.getConsumers(), "Consumers list mut not be empty!");
+		Assert.notEmpty(registeredConsumersResponse.getConsumers(),
+				"Consumers list mut not be empty!");
+
+		Assert.isTrue(registeredConsumersResponse.getResponseType() == ResponseType.COMMUNICATION,
+				"Response type is not of type communication!");
 	}
 
 	@Test
 	public void testC_ConsumerSubscribeToTopics() throws Exception {
 		logger.info("Running testC_ConsumerSubscribeToTopics");
-
 		SubscribeTopicOperationResponse subscriptionsResponse = mockConsumerTopicSubscribeOperation();
-		Assert.notEmpty(subscriptionsResponse.getSubscriptions(), "Consumer subscription list is empty!");
+
+		Assert.notEmpty(subscriptionsResponse.getSubscriptions(),
+				"Consumer subscription list is empty!");
 
 		Assert.isTrue(subscriptionsResponse.getOperationStatus() == OperationStatus.SUCCESS,
 				"Subscribe operation failed!");
+
+		Assert.isTrue(subscriptionsResponse.getResponseType() == ResponseType.COMMUNICATION,
+				"Response type is not of type communication!");
 	}
 
 	@Test
 	public void testD_ConsumerSubscriptionListNotEmpty() throws Exception {
 		logger.info("Running testD_ConsumerSubscriptionListNotEmpty");
-
 		SubscribeTopicOperationResponse subscriptionListResponse = mockConsumerSubscriptionListOperation();
-		Assert.notEmpty(subscriptionListResponse.getSubscriptions(), "Consumer subscription list is empty!");
+
+		Assert.notEmpty(subscriptionListResponse.getSubscriptions(),
+				"Consumer subscription list is empty!");
 
 		Assert.isTrue(subscriptionListResponse.getOperationStatus() == OperationStatus.SUCCESS,
 				"Subscription list fetch operation failed!");
+
+		Assert.isTrue(subscriptionListResponse.getResponseType() == ResponseType.COMMUNICATION,
+				"Response type is not of type communication!");
 	}
 
 	@Test
 	public void testE_ConsumerFetchEmptyData() throws Exception {
 		logger.info("Running testE_ConsumerFetchEmptyData");
+		FetchDataOperationResponse fetchDataOperationResponse = mockConsumerFetchDataOperation();
 
-		FetchDataOperationResponse fetchDataResponse = mockConsumerFetchDataOperation();
-		Assert.isTrue(fetchDataResponse.getFetchedContents().isEmpty(), "Fetched data is not empty");
+		Assert.isTrue(fetchDataOperationResponse.getFetchedContents().isEmpty(),
+				"Fetched data is not empty");
 
-		Assert.isTrue(fetchDataResponse.getOperationStatus() == OperationStatus.SUCCESS,
+		Assert.isTrue(fetchDataOperationResponse.getOperationStatus() == OperationStatus.SUCCESS,
 				"Fetch consumer data operation failed!");
+
+		Assert.isTrue(fetchDataOperationResponse.getResponseType() == ResponseType.INCOMING_DATA,
+				"Response type is not of type communication!");
 	}
 
 	@Test
 	public void testF_ConsumerUnsubscribeFromTopics() throws Exception {
 		logger.info("Running testF_ConsumerUnsubscribeFromTopics");
+		OperationResponse operationResponse = mockConsumerUnsubscribeOperation();
 
-		OperationResponse unsubscribeResponse = mockConsumerUnsubscribeOperation();
-		Assert.isTrue(unsubscribeResponse.getOperationStatus() == OperationStatus.SUCCESS,
+		Assert.isTrue(operationResponse.getOperationStatus() == OperationStatus.SUCCESS,
 				"Unsubscribe operation failed!");
+
+		Assert.isTrue(operationResponse.getResponseType() == ResponseType.COMMUNICATION,
+				"Response type is not of type communication!");
 	}
 
 	@Test
 	public void testG_ConsumerCommitSync() throws Exception {
 		logger.info("Running testG_ConsumerCommitSync");
+		OperationResponse operationResponse = mockConsumerCommitSyncOperation();
 
-		OperationResponse commitSyncResponse = mockConsumerCommitSyncOperation();
-		Assert.isTrue(commitSyncResponse.getOperationStatus() == OperationStatus.SUCCESS,
+		Assert.isTrue(operationResponse.getOperationStatus() == OperationStatus.SUCCESS,
 				"Commit sync operation failed!");
+
+		Assert.isTrue(operationResponse.getResponseType() == ResponseType.COMMUNICATION,
+				"Response type is not of type communication!");
 	}
 
 	@Test
 	public void testH_ConsumerStop() throws Exception {
 		logger.info("Running testH_ConsumerStop");
+		OperationResponse operationResponse = mockConsumerStopOperation();
 
-		OperationResponse stopResponse = mockConsumerStopOperation();
-		Assert.isTrue(stopResponse.getOperationStatus() == OperationStatus.SUCCESS,
+		Assert.isTrue(operationResponse.getOperationStatus() == OperationStatus.SUCCESS,
 				"Stop operation failed!");
+
+		Assert.isTrue(operationResponse.getResponseType() == ResponseType.COMMUNICATION,
+				"Response type is not of type communication!");
 	}
 
 	private RegisteredConsumersResponse mockRegisteredConsumerListOperation() throws Exception {
@@ -240,17 +270,13 @@ public class KafkaConsumerRestControllerTest {
 		return readMvcResultAs(mvcResult, OperationResponse.class);
 	}
 
-	@SuppressWarnings("unchecked cast")
-	private Map<String, Object> readMvcResultAsMap(MvcResult mvcResult)
-			throws UnsupportedEncodingException, JsonProcessingException {
-
-		return readMvcResultAs(mvcResult, Map.class);
-	}
-
 	private <T> T readMvcResultAs(MvcResult mvcResult, Class<T> clazz)
-			throws UnsupportedEncodingException, JsonProcessingException {
+			throws UnsupportedEncodingException, JsonProcessingException, JSONException {
 
 		String responseContent = mvcResult.getResponse().getContentAsString();
+
+		JSONObject json = new JSONObject(responseContent);
+		logger.info("Response is: \n{}", json.toString(4));
 		return objectMapper.readValue(responseContent, clazz);
 	}
 }
