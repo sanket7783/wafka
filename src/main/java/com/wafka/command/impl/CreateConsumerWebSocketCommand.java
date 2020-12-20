@@ -12,7 +12,6 @@ import com.wafka.model.response.CreatedConsumerOperationResponse;
 import com.wafka.qualifiers.ConsumerIdProtocol;
 import com.wafka.service.IConsumerService;
 import com.wafka.service.IConsumerThreadService;
-import com.wafka.service.IConsumerWebSocketSessionService;
 import com.wafka.service.IWebSocketSenderService;
 import com.wafka.thread.IConsumerThreadCallback;
 import com.wafka.thread.impl.ConsumerThreadCallback;
@@ -21,8 +20,8 @@ import org.apache.kafka.clients.consumer.KafkaConsumer;
 import org.slf4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import org.springframework.web.socket.WebSocketSession;
 
-import javax.websocket.Session;
 import java.time.Duration;
 import java.util.Map;
 import java.util.Properties;
@@ -51,14 +50,11 @@ public class CreateConsumerWebSocketCommand implements IWebSocketCommand {
 	@Autowired
 	private IWebSocketSenderService iWebSocketSenderService;
 
-	@Autowired
-	private IConsumerWebSocketSessionService iConsumerWebSocketSessionService;
-
 	@Override
-	public void execute(CommandParameters commandParameters, Session session) {
+	public void execute(CommandParameters commandParameters, WebSocketSession webSocketSession) {
 		Map<ConsumerParameter, Object> consumerParameterMap = commandParameters.getArguments();
 
-		ConsumerId consumerId = iConsumerIdFactory.getConsumerId(session.getId());
+		ConsumerId consumerId = iConsumerIdFactory.getConsumerId(webSocketSession.getId());
 
 		// Create physical consumer.
 		Properties consumerProperties = iConsumerPropertyFactory.getProperties(consumerParameterMap);
@@ -68,8 +64,7 @@ public class CreateConsumerWebSocketCommand implements IWebSocketCommand {
 		KafkaConsumer<String, byte[]> kafkaConsumer = iConsumerService.getConsumerOrThrow(consumerId);
 
 		IConsumerThreadCallback iWebSocketConsumerCallback = new ConsumerThreadCallback(
-				session, iFetchedContentFactory, iWebSocketSenderService
-		);
+				iFetchedContentFactory, iWebSocketSenderService);
 
 		ConsumerThreadSettings consumerThreadSettings = new ConsumerThreadSettings();
 		consumerThreadSettings.setiWebSocketConsumerCallback(iWebSocketConsumerCallback);
@@ -85,9 +80,7 @@ public class CreateConsumerWebSocketCommand implements IWebSocketCommand {
 		consumerParameterMap.put(ConsumerParameter.POLL_DURATION, pollDurationSeconds);
 		consumerThreadSettings.setPollLoopDuration(Duration.ofSeconds(pollDurationSeconds));
 
-
 		iConsumerThreadService.create(consumerThreadSettings);
-		iConsumerWebSocketSessionService.store(consumerId, session);
 
 		CreatedConsumerOperationResponse createdConsumerOperationResponse = new CreatedConsumerOperationResponse();
 		createdConsumerOperationResponse.setConsumerParameters(consumerParameterMap);
@@ -96,7 +89,7 @@ public class CreateConsumerWebSocketCommand implements IWebSocketCommand {
 		createdConsumerOperationResponse.setResponseType(ResponseType.COMMUNICATION);
 
 		logger.info("Created consumer with settings {}", consumerParameterMap);
-		iWebSocketSenderService.send(session, createdConsumerOperationResponse);
+		iWebSocketSenderService.send(consumerId, createdConsumerOperationResponse);
 	}
 
 	@Override

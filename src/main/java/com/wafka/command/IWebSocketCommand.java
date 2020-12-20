@@ -1,5 +1,10 @@
 package com.wafka.command;
 
+import com.wafka.exception.MissingCommandArgumentException;
+import com.wafka.model.CommandParameters;
+import org.springframework.web.socket.WebSocketSession;
+
 public interface IWebSocketCommand extends ICommand {
-	// This interface can be used to specify custom methods for web socket commands.
+	void execute(CommandParameters commandParameters, WebSocketSession webSocketSession)
+			throws MissingCommandArgumentException;
 }

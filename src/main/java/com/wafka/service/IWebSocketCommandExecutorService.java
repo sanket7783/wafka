@@ -1,9 +1,8 @@
 package com.wafka.service;
 
 import com.wafka.model.CommandParameters;
-
-import javax.websocket.Session;
+import org.springframework.web.socket.WebSocketSession;
 
 public interface IWebSocketCommandExecutorService {
-	void execute(CommandParameters commandParameters, Session session);
+	void execute(CommandParameters commandParameters, WebSocketSession webSocketSession);
 }

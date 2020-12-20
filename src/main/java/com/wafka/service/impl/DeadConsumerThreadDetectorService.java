@@ -10,8 +10,8 @@ import org.slf4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
+import org.springframework.web.socket.CloseStatus;
 
-import javax.websocket.CloseReason;
 import java.io.IOException;
 
 @Service
@@ -45,11 +45,11 @@ public class DeadConsumerThreadDetectorService {
 					logger.warn("Could not stop the consumer thread {} because it doesn't exists.", iConsumerId);
 				}
 
-				CloseReason closeReason = new CloseReason(CloseReason.CloseCodes.UNEXPECTED_CONDITION,
+				CloseStatus closeStatus = new CloseStatus(CloseStatus.SERVER_ERROR.getCode(),
 						"Consumer thread " + iConsumerId + " not running anymore");
 
 				try {
-					iConsumerWebSocketSessionService.close(iConsumerId, closeReason);
+					iConsumerWebSocketSessionService.close(iConsumerId, closeStatus);
 					logger.info("Session closed for consumer {}", iConsumerId);
 
 				} catch (IOException exception) {

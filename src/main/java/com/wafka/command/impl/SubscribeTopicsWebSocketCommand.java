@@ -13,8 +13,8 @@ import com.wafka.service.IWebSocketSenderService;
 import com.wafka.types.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import org.springframework.web.socket.WebSocketSession;
 
-import javax.websocket.Session;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
@@ -34,7 +34,7 @@ public class SubscribeTopicsWebSocketCommand implements IWebSocketCommand {
 
 	@SuppressWarnings("unchecked")
 	@Override
-	public void execute(CommandParameters commandParameters, Session session) {
+	public void execute(CommandParameters commandParameters, WebSocketSession webSocketSession) {
 		Optional<Object> topicOptional = commandParameters.getArgument(ConsumerParameter.TOPICS);
 		if (!topicOptional.isPresent()) {
 			throw new MissingCommandArgumentException(ConsumerParameter.TOPICS, this.getName());
@@ -47,7 +47,7 @@ public class SubscribeTopicsWebSocketCommand implements IWebSocketCommand {
 			throw new InvalidTopicListArgumentException();
 		}
 
-		ConsumerId consumerId = iConsumerIdFactory.getConsumerId(session.getId());
+		ConsumerId consumerId = iConsumerIdFactory.getConsumerId(webSocketSession.getId());
 		OperationStatus operationStatus = iAutoConsumerOperationService.subscribe(consumerId, topics);
 
 		SubscribeTopicOperationResponse subscriptionsConsumerResponse = new SubscribeTopicOperationResponse();
@@ -56,7 +56,7 @@ public class SubscribeTopicsWebSocketCommand implements IWebSocketCommand {
 		subscriptionsConsumerResponse.setResponseType(ResponseType.COMMUNICATION);
 		subscriptionsConsumerResponse.setOperationStatus(operationStatus);
 
-		iWebSocketSenderService.send(session, subscriptionsConsumerResponse);
+		iWebSocketSenderService.send(consumerId, subscriptionsConsumerResponse);
 	}
 
 	@Override

@@ -81,6 +81,7 @@ public class ConsumerThread extends AbstractConsumerThread {
 
 			} catch (Exception exception) {
 				iWebSocketConsumerCallback.onConsumerError(consumerId, exception);
+				Thread.currentThread().interrupt();
 			}
 		}
 	}

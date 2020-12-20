@@ -1,20 +1,16 @@
 package com.wafka.factory.impl;
 
-import com.wafka.command.ICommand;
 import com.wafka.command.IWebSocketCommand;
 import com.wafka.exception.NoSuchCommandException;
-import com.wafka.factory.ICommandFactory;
-import com.wafka.qualifiers.CommandFactoryProtocol;
+import com.wafka.factory.IWebSocketCommandFactory;
 import com.wafka.types.CommandName;
-import com.wafka.types.Protocol;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 
 @Service
-@CommandFactoryProtocol(Protocol.WEBSOCKET)
-public class WebSocketCommandFactory implements ICommandFactory {
+public class WebSocketCommandFactory implements IWebSocketCommandFactory {
 	private final List<IWebSocketCommand> iWebSocketCommandList;
 
 	@Autowired
@@ -23,12 +19,9 @@ public class WebSocketCommandFactory implements ICommandFactory {
 	}
 
 	@Override
-	public ICommand getCommand(CommandName commandName) {
-		for (IWebSocketCommand iWebSocketCommand : iWebSocketCommandList) {
-			if (iWebSocketCommand.getName().equals(commandName)) {
-				return iWebSocketCommand;
-			}
-		}
-		throw new NoSuchCommandException(commandName);
+	public IWebSocketCommand getCommand(CommandName commandName) {
+		return iWebSocketCommandList.stream()
+				.filter(command -> command.getName().equals(commandName))
+				.findFirst().orElseThrow(() -> new NoSuchCommandException(commandName));
 	}
 }

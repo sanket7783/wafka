@@ -14,8 +14,8 @@ import com.wafka.types.Protocol;
 import com.wafka.types.ResponseType;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import org.springframework.web.socket.WebSocketSession;
 
-import javax.websocket.Session;
 import java.util.Set;
 
 @Component
@@ -31,8 +31,8 @@ public class ListSubscriptionsWebSocketCommand implements IWebSocketCommand {
 	private IWebSocketSenderService iWebSocketSenderService;
 
 	@Override
-	public void execute(CommandParameters commandParameters, Session session) {
-		ConsumerId consumerId = iConsumerIdFactory.getConsumerId(session.getId());
+	public void execute(CommandParameters commandParameters, WebSocketSession webSocketSession) {
+		ConsumerId consumerId = iConsumerIdFactory.getConsumerId(webSocketSession.getId());
 		Set<String> subscriptions = iAutoConsumerOperationService.getSubscriptions(consumerId);
 
 		SubscribeTopicOperationResponse subscriptionsConsumerResponse = new SubscribeTopicOperationResponse();
@@ -41,7 +41,7 @@ public class ListSubscriptionsWebSocketCommand implements IWebSocketCommand {
 		subscriptionsConsumerResponse.setResponseType(ResponseType.COMMUNICATION);
 		subscriptionsConsumerResponse.setOperationStatus(OperationStatus.SUCCESS);
 
-		iWebSocketSenderService.send(session, subscriptionsConsumerResponse);
+		iWebSocketSenderService.send(consumerId, subscriptionsConsumerResponse);
 	}
 
 	@Override

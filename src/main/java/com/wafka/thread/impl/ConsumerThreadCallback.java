@@ -3,8 +3,8 @@ package com.wafka.thread.impl;
 import com.wafka.factory.IFetchedContentFactory;
 import com.wafka.model.ConsumerId;
 import com.wafka.model.FetchedContent;
-import com.wafka.model.response.OperationResponse;
 import com.wafka.model.response.FetchDataOperationResponse;
+import com.wafka.model.response.OperationResponse;
 import com.wafka.service.IWebSocketSenderService;
 import com.wafka.thread.IConsumerThreadCallback;
 import com.wafka.types.OperationStatus;
@@ -13,24 +13,18 @@ import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.websocket.Session;
 import java.util.List;
 
 public class ConsumerThreadCallback implements IConsumerThreadCallback {
 	private static final Logger LOGGER = LoggerFactory.getLogger(ConsumerThreadCallback.class);
 
-	private final Session session;
-
 	private final IFetchedContentFactory iFetchedContentFactory;
 
 	private final IWebSocketSenderService iWebSocketSenderService;
 
-	public ConsumerThreadCallback(
-			Session session,
-			IFetchedContentFactory iFetchedContentFactory,
-			IWebSocketSenderService iWebSocketSenderService) {
+	public ConsumerThreadCallback(IFetchedContentFactory iFetchedContentFactory,
+								  IWebSocketSenderService iWebSocketSenderService) {
 
-		this.session = session;
 		this.iFetchedContentFactory = iFetchedContentFactory;
 		this.iWebSocketSenderService = iWebSocketSenderService;
 	}
@@ -44,7 +38,7 @@ public class ConsumerThreadCallback implements IConsumerThreadCallback {
 		fetchDataConsumerResponse.setConsumerId(consumerId);
 		fetchDataConsumerResponse.setOperationStatus(OperationStatus.SUCCESS);
 
-		iWebSocketSenderService.send(session, fetchDataConsumerResponse);
+		iWebSocketSenderService.send(consumerId, fetchDataConsumerResponse);
 	}
 
 	@Override
@@ -57,6 +51,6 @@ public class ConsumerThreadCallback implements IConsumerThreadCallback {
 		consumerOperationResponse.setResponseType(ResponseType.ERROR);
 		consumerOperationResponse.setOperationStatus(OperationStatus.FAIL);
 
-		iWebSocketSenderService.send(session, consumerOperationResponse);
+		iWebSocketSenderService.send(consumerId, consumerOperationResponse);
 	}
 }

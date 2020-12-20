@@ -7,6 +7,7 @@ import com.wafka.model.CommandParameters;
 import com.wafka.model.ConsumerId;
 import com.wafka.model.response.OperationResponse;
 import com.wafka.qualifiers.ConsumerIdProtocol;
+import com.wafka.service.IConsumerWebSocketSessionService;
 import com.wafka.service.IWebSocketSenderService;
 import com.wafka.types.CommandName;
 import com.wafka.types.OperationStatus;
@@ -15,8 +16,7 @@ import com.wafka.types.ResponseType;
 import org.slf4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-
-import javax.websocket.Session;
+import org.springframework.web.socket.WebSocketSession;
 
 @Component
 public class SocketCreatedWebSocketCommand implements IWebSocketCommand {
@@ -30,19 +30,25 @@ public class SocketCreatedWebSocketCommand implements IWebSocketCommand {
 	@ConsumerIdProtocol(Protocol.WEBSOCKET)
 	private IConsumerIdFactory iConsumerIdFactory;
 
+	@Autowired
+	private IConsumerWebSocketSessionService iConsumerWebSocketSessionService;
+
 	@Override
-	public void execute(CommandParameters commandParameters, Session session) throws MissingCommandArgumentException {
-		ConsumerId consumerId = iConsumerIdFactory.getConsumerId(session.getId());
+	public void execute(CommandParameters commandParameters, WebSocketSession webSocketSession)
+			throws MissingCommandArgumentException {
+
+		ConsumerId consumerId = iConsumerIdFactory.getConsumerId(webSocketSession.getId());
 
 		logger.info("Established WebSocket connection. Session id {}. When requested, the consumer will have id {}",
-				session.getId(), consumerId);
+				webSocketSession.getId(), consumerId);
 
 		OperationResponse consumerOperationResponse = new OperationResponse();
 		consumerOperationResponse.setConsumerId(consumerId);
 		consumerOperationResponse.setResponseType(ResponseType.COMMUNICATION);
 		consumerOperationResponse.setOperationStatus(OperationStatus.SUCCESS);
 
-		iWebSocketSenderService.send(session, consumerOperationResponse);
+		iConsumerWebSocketSessionService.store(consumerId, webSocketSession);
+		iWebSocketSenderService.send(consumerId, consumerOperationResponse);
 	}
 
 	@Override

@@ -1,53 +1,58 @@
 package com.wafka.controller;
 
-import com.wafka.configurer.SpringContext;
-import com.wafka.decoder.WebSocketCommandDecoder;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.reflect.TypeToken;
+import com.wafka.deserializer.CommandNameDeserializer;
+import com.wafka.deserializer.ConsumerParameterDeserializer;
 import com.wafka.model.CommandParameters;
 import com.wafka.service.IWebSocketCommandExecutorService;
 import com.wafka.types.CommandName;
-import org.slf4j.Logger;
-import org.springframework.context.ApplicationContext;
+import com.wafka.types.ConsumerParameter;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Controller;
+import org.springframework.web.socket.CloseStatus;
+import org.springframework.web.socket.TextMessage;
+import org.springframework.web.socket.WebSocketSession;
+import org.springframework.web.socket.handler.AbstractWebSocketHandler;
 
-import javax.websocket.*;
-import javax.websocket.server.ServerEndpoint;
+import java.lang.reflect.Type;
 
-@ServerEndpoint(value = "/kafka/consumer/ws/v1", decoders = { WebSocketCommandDecoder.class })
-public class KafkaConsumerWebSocketController {
-	private final Logger logger;
+@Controller
+public class KafkaConsumerWebSocketController extends AbstractWebSocketHandler {
+	@Autowired
+	private IWebSocketCommandExecutorService iWebSocketCommandExecutorService;
 
-	private final IWebSocketCommandExecutorService iWebSocketCommandExecutorService;
-
-	public KafkaConsumerWebSocketController() {
-		ApplicationContext applicationContext = SpringContext.getApplicationContext();
-
-		logger = applicationContext.getBean(Logger.class);
-		iWebSocketCommandExecutorService = applicationContext.getBean(IWebSocketCommandExecutorService.class);
+	@Override
+	public void afterConnectionEstablished(WebSocketSession webSocketSession) throws Exception {
+		iWebSocketCommandExecutorService.execute(new CommandParameters(CommandName.SOCKET_CREATED), webSocketSession);
 	}
 
-	@OnOpen
-	public void onOpenConnection(Session session) {
-		iWebSocketCommandExecutorService.execute(new CommandParameters(CommandName.SOCKET_CREATED), session);
-	}
+	@Override
+	protected void handleTextMessage(WebSocketSession session, TextMessage textMessage) throws Exception {
+		GsonBuilder gsonBuilder = new GsonBuilder();
+		gsonBuilder.registerTypeAdapter(ConsumerParameter.class, new ConsumerParameterDeserializer());
+		gsonBuilder.registerTypeAdapter(CommandName.class, new CommandNameDeserializer());
 
-	@OnMessage
-	public void onMessage(CommandParameters commandParameters, Session session) {
+		Gson gson = gsonBuilder.create();
+		Type commandParametersType = new TypeToken<CommandParameters>(){}.getType();
+		CommandParameters commandParameters = gson.fromJson(textMessage.getPayload(), commandParametersType);
+
 		iWebSocketCommandExecutorService.execute(commandParameters, session);
 	}
 
-	@OnClose
-	public void onCloseConnection(Session session, CloseReason closeReason) {
-		String reason = closeReason.getReasonPhrase();
-		if (reason == null || reason.isEmpty()) {
-			logger.info("Closing WebSocket session {} due to normal reason", session.getId());
-		} else {
-			logger.info("Closing WebSocket session {} due to reason: {}", session.getId(), reason);
-		}
-		iWebSocketCommandExecutorService.execute(new CommandParameters(CommandName.STOP_CONSUMER), session);
+	@Override
+	public void handleTransportError(WebSocketSession webSocketSession, Throwable throwable) throws Exception {
+		iWebSocketCommandExecutorService.execute(new CommandParameters(CommandName.STOP_CONSUMER), webSocketSession);
 	}
 
-	@OnError
-	public void onError(Session session, Throwable throwable) {
-		logger.error("An error occurred: {}", throwable.getMessage());
-		iWebSocketCommandExecutorService.execute(new CommandParameters(CommandName.STOP_CONSUMER), session);
+	@Override
+	public void afterConnectionClosed(WebSocketSession webSocketSession, CloseStatus closeStatus) throws Exception {
+		iWebSocketCommandExecutorService.execute(new CommandParameters(CommandName.STOP_CONSUMER), webSocketSession);
+	}
+
+	@Override
+	public boolean supportsPartialMessages() {
+		return false;
 	}
 }

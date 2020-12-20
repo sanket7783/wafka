@@ -1,12 +1,11 @@
 package com.wafka.service.impl;
 
-import com.wafka.command.ICommand;
-import com.wafka.factory.ICommandFactory;
+import com.wafka.command.IWebSocketCommand;
 import com.wafka.factory.IConsumerIdFactory;
+import com.wafka.factory.IWebSocketCommandFactory;
 import com.wafka.model.CommandParameters;
 import com.wafka.model.ConsumerId;
 import com.wafka.model.response.OperationResponse;
-import com.wafka.qualifiers.CommandFactoryProtocol;
 import com.wafka.qualifiers.ConsumerIdProtocol;
 import com.wafka.service.IWebSocketCommandExecutorService;
 import com.wafka.service.IWebSocketSenderService;
@@ -17,8 +16,7 @@ import com.wafka.types.ResponseType;
 import org.slf4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-
-import javax.websocket.Session;
+import org.springframework.web.socket.WebSocketSession;
 
 @Service
 public class WebSocketCommandExecutorService implements IWebSocketCommandExecutorService {
@@ -26,8 +24,7 @@ public class WebSocketCommandExecutorService implements IWebSocketCommandExecuto
 	private Logger logger;
 
 	@Autowired
-	@CommandFactoryProtocol(Protocol.WEBSOCKET)
-	private ICommandFactory iCommandFactory;
+	private IWebSocketCommandFactory iWebSocketCommandFactory;
 
 	@Autowired
 	@ConsumerIdProtocol(Protocol.WEBSOCKET)
@@ -37,14 +34,14 @@ public class WebSocketCommandExecutorService implements IWebSocketCommandExecuto
 	private IWebSocketSenderService iWebSocketSenderService;
 
 	@Override
-	public void execute(CommandParameters commandParameters, Session session) {
+	public void execute(CommandParameters commandParameters, WebSocketSession webSocketSession) {
 		CommandName commandName = commandParameters.getCommandName();
 		try {
-			ICommand iCommand = iCommandFactory.getCommand(commandName);
-			iCommand.execute(commandParameters, session);
+			IWebSocketCommand iWebSocketCommand = iWebSocketCommandFactory.getCommand(commandName);
+			iWebSocketCommand.execute(commandParameters, webSocketSession);
 
 		} catch (Exception exception) {
-			ConsumerId consumerId = iConsumerIdFactory.getConsumerId(session.getId());
+			ConsumerId consumerId = iConsumerIdFactory.getConsumerId(webSocketSession.getId());
 			logger.error("Exception for consumer {}: {}", consumerId, exception.getMessage(), exception);
 
 			OperationResponse operationResponse = new OperationResponse();
@@ -52,7 +49,7 @@ public class WebSocketCommandExecutorService implements IWebSocketCommandExecuto
 			operationResponse.setResponseType(ResponseType.ERROR);
 			operationResponse.setOperationStatus(OperationStatus.FAIL);
 
-			iWebSocketSenderService.send(session, operationResponse);
+			iWebSocketSenderService.send(consumerId, operationResponse);
 		}
 	}
 }
