@@ -68,7 +68,7 @@ for i in range(0, iterations):
         print("Sending object {}/{}".format(str(i), str(iterations)))
         x = producer.send(topic, toSend)
         x.get()
-        #time.sleep(0.1)
+        time.sleep(0.1)
         print("Sent object {}/{}\n".format(str(i), str(iterations)))
 
 producer.flush()

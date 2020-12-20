@@ -17,8 +17,6 @@ public class KafkaConsumerWebSocketController {
 
 	private final IWebSocketCommandExecutorService iWebSocketCommandExecutorService;
 
-	private Session session;
-
 	public KafkaConsumerWebSocketController() {
 		ApplicationContext applicationContext = SpringContext.getApplicationContext();
 
@@ -28,17 +26,16 @@ public class KafkaConsumerWebSocketController {
 
 	@OnOpen
 	public void onOpenConnection(Session session) {
-		this.session = session;
 		iWebSocketCommandExecutorService.execute(new CommandParameters(CommandName.SOCKET_CREATED), session);
 	}
 
 	@OnMessage
-	public void onMessage(CommandParameters commandParameters) {
+	public void onMessage(CommandParameters commandParameters, Session session) {
 		iWebSocketCommandExecutorService.execute(commandParameters, session);
 	}
 
 	@OnClose
-	public void onCloseConnection(CloseReason closeReason) {
+	public void onCloseConnection(Session session, CloseReason closeReason) {
 		String reason = closeReason.getReasonPhrase();
 		if (reason == null || reason.isEmpty()) {
 			logger.info("Closing WebSocket session {} due to normal reason", session.getId());
@@ -49,7 +46,7 @@ public class KafkaConsumerWebSocketController {
 	}
 
 	@OnError
-	public void onError(Throwable throwable) {
+	public void onError(Session session, Throwable throwable) {
 		logger.error("An error occurred: {}", throwable.getMessage());
 		iWebSocketCommandExecutorService.execute(new CommandParameters(CommandName.STOP_CONSUMER), session);
 	}
